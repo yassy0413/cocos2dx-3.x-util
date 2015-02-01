@@ -1,3 +1,7 @@
+/****************************************************************************
+ Copyright (c) Yassy
+ https://github.com/yassy0413/cocos2dx-3.x-util
+ ****************************************************************************/
 #ifndef __CCB_ZIP_DOWNLOADER_H__
 #define __CCB_ZIP_DOWNLOADER_H__
 
