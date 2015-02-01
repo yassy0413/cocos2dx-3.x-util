@@ -43,9 +43,11 @@ bool LazySprite::initAsync(const std::string& filename, const ccLazySpriteCallba
 
 bool LazySprite::initWithURL(const std::string& url, const ccLazySpriteCallback& callback, const std::string& cachePath){
 	if( init() ){
-		const size_t hash = std::hash<std::string>()( url );
 		_cacheFileDir = FileUtils::getInstance()->getWritablePath() + cachePath;
-		_cacheFilePath = _cacheFileDir + std::to_string(hash);
+		if( *_cacheFileDir.rbegin() != '/' ){
+			_cacheFileDir.push_back('/');
+		}
+		_cacheFilePath = _cacheFileDir + url.substr( url.rfind('/')+1, std::string::npos );
 		_pCallback = callback;
 		
 		if( !cachePath.empty() && FileUtils::getInstance()->isFileExist( _cacheFilePath ) ){
@@ -81,6 +83,7 @@ void LazySprite::httpRequestCallback(network::HttpClient* client, network::HttpR
 			Director::getInstance()->getTextureCache()->addImageAsync( _cacheFilePath, CC_CALLBACK_1(LazySprite::textureLoadCallback, this) );
 		}
 	}else{
+		CCLOG("%s", _cacheFilePath.c_str());
 		CC_ASSERT(0);
 	}
 	
