@@ -1,5 +1,5 @@
-#ifndef __CCBBuilder_H__
-#define __CCBBuilder_H__
+#ifndef __CCBBUILDER_H__
+#define __CCBBUILDER_H__
 
 #include "cocos2d.h"
 #include "cocos-ext.h"
