@@ -73,7 +73,7 @@ bool LazySprite::initWithURL(const std::string& url, const ccLazySpriteCallback&
 
 void LazySprite::httpRequestCallback(network::HttpClient* client, network::HttpResponse* response){
 	
-	if( response->getResponseCode() == 200 ){
+	if( response->isSucceed() ){
 		// ダウンロードしたファイルをローカルへ保存する
 		if( FileUtils::getInstance()->createDirectory( _cacheFileDir ) ){
 			FILE* file = fopen( _cacheFilePath.c_str(), "wb" );

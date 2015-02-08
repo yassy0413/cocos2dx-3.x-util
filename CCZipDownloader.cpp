@@ -55,7 +55,7 @@ void ZipDownloader::download(const std::string& url, const ccZipDownloaderCallba
 void ZipDownloader::httpRequestCallback(network::HttpClient* client, network::HttpResponse* response){
 	//CCLOG("ZipDownloader::httpRequestCallback: %s", response->getHttpRequest()->getUrl());
 	
-	if( response->getResponseCode() != 200 ){
+	if( !response->isSucceed() ){
 		CC_ASSERT(0);
 		return;
 	}
