@@ -33,20 +33,20 @@ public:
 	/**
 	 * cocosbuilder::CCBMemberVariableAssigner
 	 */
-	virtual bool onAssignCCBMemberVariable(Ref* target, const char* memberVariableName, Node* node);
-	virtual bool onAssignCCBCustomProperty(Ref* target, const char* memberVariableName, const Value& value);
+	virtual bool onAssignCCBMemberVariable(Ref* target, const char* memberVariableName, Node* node) override;
+	virtual bool onAssignCCBCustomProperty(Ref* target, const char* memberVariableName, const Value& value) override;
 	
 	/**
 	 * cocosbuilder::CCBSelectorResolver
 	 */
-	virtual SEL_MenuHandler onResolveCCBCCMenuItemSelector(Ref * pTarget, const char* pSelectorName);
-	virtual SEL_CallFuncN onResolveCCBCCCallFuncSelector(Ref * pTarget, const char* pSelectorName);
-	virtual Control::Handler onResolveCCBCCControlSelector(Ref * pTarget, const char* pSelectorName);
+	virtual SEL_MenuHandler onResolveCCBCCMenuItemSelector(Ref * pTarget, const char* pSelectorName) override;
+	virtual SEL_CallFuncN onResolveCCBCCCallFuncSelector(Ref * pTarget, const char* pSelectorName) override;
+	virtual Control::Handler onResolveCCBCCControlSelector(Ref * pTarget, const char* pSelectorName) override;
 	
 	/**
 	 * cocosbuilder::CCBAnimationManagerDelegate
 	 */
-	virtual void completedAnimationSequenceNamed(const char *name);
+	virtual void completedAnimationSequenceNamed(const char *name) override;
 	
 public:
 	

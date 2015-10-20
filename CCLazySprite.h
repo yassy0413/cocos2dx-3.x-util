@@ -26,8 +26,6 @@ class LazySprite
 : public Sprite
 {
 public:
-	LazySprite();
-	virtual ~LazySprite();
 	
 	/**
 	 * urlで指定された画像ファイルをダウンロードし、テクスチャの非同期読み込みが完了したら自身へ適用するスプライトを生成
@@ -42,6 +40,9 @@ public:
 	static Sprite* createAsync(const std::string& filename, const ccLazySpriteCallback& callback = nullptr);
 	
 CC_CONSTRUCTOR_ACCESS:
+	
+	LazySprite();
+	virtual ~LazySprite();
 	
 	bool initWithURL(const std::string& url, const ccLazySpriteCallback& callback, const std::string& cachePath);
 	bool initAsync(const std::string& filename, const ccLazySpriteCallback& callback);

@@ -7,16 +7,14 @@
 NS_CC_EXT_BEGIN
 
 CCBNode* CCBNode::create(cocosbuilder::CCBReader * ccbReader){
-	CCBNode* pRet = new CCBNode();
+	CCBNode* pRet = new (std::nothrow) CCBNode();
 	if( pRet && pRet->init() ){
 		pRet->autorelease();
 		pRet->_animationManager = ccbReader->getAnimationManager();
 		return pRet;
-	}else{
-		delete pRet;
-		pRet = nullptr;
-		return nullptr;
 	}
+	delete pRet;
+	return nullptr;
 }
 
 CCBNode::CCBNode()

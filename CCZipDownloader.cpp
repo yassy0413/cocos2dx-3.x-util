@@ -22,34 +22,81 @@ void ZipDownloader::destroyInstance(){
 
 ZipDownloader::ZipDownloader()
 : _numWorkingTask(0)
+, _numWorkingDownloadTask(0)
+, _downloadedDataSize(0)
+, _limitDownloadedDataSize(10*1024*1024)
+, _limitDownloadConcurrency(3)
 {
+	_downloadThread = std::thread(CC_CALLBACK_0(ZipDownloader::downloadThread, this));
 	_unzipThread = std::thread(CC_CALLBACK_0(ZipDownloader::unzipThread, this));
 }
 
 ZipDownloader::~ZipDownloader(){
 	CC_ASSERT( numWorkingTask() == 0 );
 	
+	_downloadQueueMutex.lock();
+	_downloadQueue.push( nullptr );
+	_downloadQueueMutex.unlock();
+	_downloadSleepCondition.notify_one();
+	
 	_unzipQueueMutex.lock();
 	_unzipQueue.push( nullptr );
 	_unzipQueueMutex.unlock();
-	_SleepCondition.notify_one();
+	_unzipSleepCondition.notify_one();
 	
+	_downloadThread.join();
 	_unzipThread.join();
 	
 	s_pZipDownloader = nullptr;
 }
 
+#pragma mark -- Download Work
+
 void ZipDownloader::download(const std::string& url, const ccZipDownloaderCallback& callback){
 	
 	++_numWorkingTask;
 	
-	network::HttpRequest* req = new network::HttpRequest();
-	req->setRequestType( network::HttpRequest::Type::GET );
-	req->setUrl( url.c_str() );
-	req->setResponseCallback( CC_CALLBACK_2(ZipDownloader::httpRequestCallback, this) );
-	req->setUserData( new ccZipDownloaderCallback( callback ) );
+	DownloadUnit* pUnit = new DownloadUnit();
+	pUnit->_pCallback = new ccZipDownloaderCallback( callback );
+	pUnit->_url = url;
 	
-	network::HttpClient::getInstance()->send( req );
+	_downloadQueueMutex.lock();
+	_downloadQueue.push( pUnit );
+	_downloadQueueMutex.unlock();
+	_downloadSleepCondition.notify_one();
+}
+
+void ZipDownloader::downloadThread(){
+	
+	while(1)
+	{
+		DownloadUnit* pUnit = nullptr;
+		
+		// タスク発行待ち
+		{
+			std::lock_guard<std::mutex> lock( _downloadQueueMutex );
+			while( _downloadQueue.empty() || (_numWorkingDownloadTask >= _limitDownloadConcurrency) || (_downloadedDataSize > _limitDownloadedDataSize) ){
+				_downloadSleepCondition.wait( _downloadQueueMutex );
+			}
+			pUnit = _downloadQueue.front();
+			_downloadQueue.pop();
+		}
+		
+		// 終了検知
+		if( pUnit == nullptr ) {
+			break;
+		}
+		
+		// HttpRequest の発行
+		network::HttpRequest* req = new network::HttpRequest();
+		req->setRequestType( network::HttpRequest::Type::GET );
+		req->setUrl( pUnit->_url.c_str() );
+		req->setResponseCallback( CC_CALLBACK_2(ZipDownloader::httpRequestCallback, this) );
+		req->setUserData( pUnit->_pCallback );
+		
+		++_numWorkingDownloadTask;
+		network::HttpClient::getInstance()->sendImmediate( req );
+	}
 }
 
 void ZipDownloader::httpRequestCallback(network::HttpClient* client, network::HttpResponse* response){
@@ -60,6 +107,8 @@ void ZipDownloader::httpRequestCallback(network::HttpClient* client, network::Ht
 		return;
 	}
 	
+	--_numWorkingDownloadTask;
+	
 	UnzipUnit* pUnit = new UnzipUnit();
 	pUnit->_pCallback = (ccZipDownloaderCallback*)response->getHttpRequest()->getUserData();
 	pUnit->_url = response->getHttpRequest()->getUrl();
@@ -68,12 +117,15 @@ void ZipDownloader::httpRequestCallback(network::HttpClient* client, network::Ht
 	pUnit->_pHttpResponse = response;
 	pUnit->_pHttpResponse->retain();
 	
+	_downloadedDataSize += pUnit->_datasize;
+	
 	_unzipQueueMutex.lock();
 	_unzipQueue.push( pUnit );
 	_unzipQueueMutex.unlock();
-	
-	_SleepCondition.notify_one();
+	_unzipSleepCondition.notify_one();
 }
+
+#pragma mark -- Unzip Work
 
 void ZipDownloader::unzip(const std::string& url, const void* data, ssize_t datasize, const ccZipDownloaderCallback& callback){
 	
@@ -86,11 +138,12 @@ void ZipDownloader::unzip(const std::string& url, const void* data, ssize_t data
 	pUnit->_datasize = datasize;
 	pUnit->_pHttpResponse = nullptr;
 	
+	_downloadedDataSize += pUnit->_datasize;
+	
 	_unzipQueueMutex.lock();
 	_unzipQueue.push( pUnit );
 	_unzipQueueMutex.unlock();
-	
-	_SleepCondition.notify_one();
+	_unzipSleepCondition.notify_one();
 }
 
 void ZipDownloader::unzipThread(){
@@ -108,11 +161,13 @@ void ZipDownloader::unzipThread(){
 		{
 			std::lock_guard<std::mutex> lock( _unzipQueueMutex );
 			while( _unzipQueue.empty() ){
-				_SleepCondition.wait( _unzipQueueMutex );
+				_unzipSleepCondition.wait( _unzipQueueMutex );
 			}
 			pUnit = _unzipQueue.front();
 			_unzipQueue.pop();
 		}
+		
+		_downloadSleepCondition.notify_one();
 		
 		// 終了検知
 		if( pUnit == nullptr ) {
@@ -143,7 +198,9 @@ void ZipDownloader::unzipThread(){
 		}
 		delete zipfile;
 		
-		//
+		_downloadedDataSize -= pUnit->_datasize;
+		
+		// UIスレッドからのコールバック設定
 		_responseQueueMutex.lock();
 		_responseQueue.push( pUnit );
 		_responseQueueMutex.unlock();
