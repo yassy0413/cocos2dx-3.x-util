@@ -10,8 +10,8 @@
 
 NS_CC_BEGIN
 namespace network {
-	class HttpClient;
-	class HttpResponse;
+    class HttpClient;
+    class HttpResponse;
 }
 NS_CC_END
 
@@ -26,34 +26,34 @@ class LazySprite
 : public Sprite
 {
 public:
-	
-	/**
-	 * urlで指定された画像ファイルをダウンロードし、テクスチャの非同期読み込みが完了したら自身へ適用するスプライトを生成
-	 * @return  An autoreleased sprite object.
-	 */
-	static Sprite* createWithURL(const std::string& url, const ccLazySpriteCallback& callback = nullptr, const std::string& cachePath = "LazySprite/");
-	
-	/**
-	 * filenameで指定されたテクスチャの非同期読み込みが完了したら自身へ適用するスプライトを生成
-	 * @return  An autoreleased sprite object.
-	 */
-	static Sprite* createAsync(const std::string& filename, const ccLazySpriteCallback& callback = nullptr);
-	
+    
+    /**
+     * urlで指定された画像ファイルをダウンロードし、テクスチャの非同期読み込みが完了したら自身へ適用するスプライトを生成
+     * @return  An autoreleased sprite object.
+     */
+    static Sprite* createWithURL(const std::string& url, const ccLazySpriteCallback& callback = nullptr, const std::string& cachePath = "LazySprite/");
+    
+    /**
+     * filenameで指定されたテクスチャの非同期読み込みが完了したら自身へ適用するスプライトを生成
+     * @return  An autoreleased sprite object.
+     */
+    static Sprite* createAsync(const std::string& filename, const ccLazySpriteCallback& callback = nullptr);
+    
 CC_CONSTRUCTOR_ACCESS:
-	
-	LazySprite();
-	virtual ~LazySprite();
-	
-	bool initWithURL(const std::string& url, const ccLazySpriteCallback& callback, const std::string& cachePath);
-	bool initAsync(const std::string& filename, const ccLazySpriteCallback& callback);
-	
+    
+    LazySprite();
+    virtual ~LazySprite();
+    
+    bool initWithURL(const std::string& url, const ccLazySpriteCallback& callback, const std::string& cachePath);
+    bool initAsync(const std::string& filename, const ccLazySpriteCallback& callback);
+    
 private:
-	void httpRequestCallback(network::HttpClient* client, network::HttpResponse* response);
-	void textureLoadCallback(Texture2D* texture);
-	
-	std::string _cacheFileDir;
-	std::string _cacheFilePath;
-	ccLazySpriteCallback _pCallback;
+    void httpRequestCallback(network::HttpClient* client, network::HttpResponse* response);
+    void textureLoadCallback(Texture2D* texture);
+    
+    std::string _cacheFileDir;
+    std::string _cacheFilePath;
+    ccLazySpriteCallback _pCallback;
 };
 
 NS_CC_EXT_END
