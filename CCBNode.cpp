@@ -6,6 +6,8 @@
 
 NS_CC_EXT_BEGIN
 
+const char* CCBNode::DEFAULT_ANIMATION_NAME = "Default Timeline";
+
 CCBNode* CCBNode::create(cocosbuilder::CCBReader * ccbReader){
     CCBNode* pRet = new (std::nothrow) CCBNode();
     if( pRet && pRet->init() ){
@@ -17,10 +19,22 @@ CCBNode* CCBNode::create(cocosbuilder::CCBReader * ccbReader){
     return nullptr;
 }
 
+
+CCBNode* CCBNode::createFromFile(const char* ccbiFileName){
+    CCASSERT( FileUtils::getInstance()->isFileExist(ccbiFileName), ccbiFileName );
+    auto reader = new (std::nothrow) cocosbuilder::CCBReader( cocosbuilder::NodeLoaderLibrary::getInstance() );
+    auto pRet = dynamic_cast<cocos2d::extension::CCBNode*>( reader->readNodeGraphFromFile(ccbiFileName) );
+    CCASSERT( pRet, cocos2d::StringUtils::format("[%s] is not CCBNode", ccbiFileName).c_str() );
+    reader->release();
+    return pRet;
+}
+
 CCBNode::CCBNode()
-: _animationManager(nullptr)
+: onAnimationCompleteCallback(nullptr)
+, _animationManager(nullptr)
 , _lastCompletedAnimationSequenceNamed("")
 , _runningAnimationName("")
+, _autoReleaseWithAnimation(false)
 {}
 
 CCBNode::~CCBNode()
@@ -53,14 +67,23 @@ SEL_CallFuncN CCBNode::onResolveCCBCCCallFuncSelector(Ref * pTarget, const char*
 }
 
 void CCBNode::completedAnimationSequenceNamed(const char *name){
+    
     _lastCompletedAnimationSequenceNamed = name;
     
-    if( _reservedAnimationNames.empty() ){
-        _runningAnimationName = "";
+    if( onAnimationCompleteCallback ){
+        onAnimationCompleteCallback( name );
+    }
+    
+    if( _autoReleaseWithAnimation ){
+        removeFromParent();
     }else{
-        _runningAnimationName = _reservedAnimationNames.front();
-        _reservedAnimationNames.pop();
-        runAnimation(_runningAnimationName);
+        if( _reservedAnimationNames.empty() ){
+            _runningAnimationName = "";
+        }else{
+            _runningAnimationName = _reservedAnimationNames.front();
+            _reservedAnimationNames.pop();
+            runAnimation(_runningAnimationName);
+        }
     }
 }
 

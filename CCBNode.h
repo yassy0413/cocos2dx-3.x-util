@@ -28,37 +28,42 @@ public:
     /*
      * Custom CREATE_FUNC
      */
-    static CCBNode* create(cocosbuilder::CCBReader * ccbReader);
+    static CCBNode* create(cocosbuilder::CCBReader* ccbReader);
     
     /**
-     * cocosbuilder::CCBMemberVariableAssigner
+     * CCBReaderから作成されたインスタンスを作成する
      */
+    static CCBNode* createFromFile(const char* ccbiFileName);
+    
+    /**
+     * CCBのデフォルトアニメーション名称
+     */
+    static const char* DEFAULT_ANIMATION_NAME;
+    
+    
+    // cocosbuilder::CCBMemberVariableAssigner
     virtual bool onAssignCCBMemberVariable(Ref* target, const char* memberVariableName, Node* node) override;
     virtual bool onAssignCCBCustomProperty(Ref* target, const char* memberVariableName, const Value& value) override;
     
-    /**
-     * cocosbuilder::CCBSelectorResolver
-     */
+    // cocosbuilder::CCBSelectorResolver
     virtual SEL_MenuHandler onResolveCCBCCMenuItemSelector(Ref * pTarget, const char* pSelectorName) override;
     virtual SEL_CallFuncN onResolveCCBCCCallFuncSelector(Ref * pTarget, const char* pSelectorName) override;
     virtual Control::Handler onResolveCCBCCControlSelector(Ref * pTarget, const char* pSelectorName) override;
     
-    /**
-     * cocosbuilder::CCBAnimationManagerDelegate
-     */
+    // cocosbuilder::CCBAnimationManagerDelegate
     virtual void completedAnimationSequenceNamed(const char *name) override;
     
 public:
     
     /**
-     *
+     * ノードを検索
      */
     inline Node* getVariable(const char* name) const {
         return _variableNodes.at(name);
     }
     
     /**
-     *
+     * ノードを指定の型として検索
      */
     template <class T>
     inline T* getVariableAs(const char* name) const {
@@ -67,11 +72,15 @@ public:
     }
     
     /**
-     *
+     * ノードを指定の型として検索。対象の型が違うか、ノードが見つからない場合はnullを返す
      */
     template <class T>
     inline T* getSafeVariableAs(const char* name) const {
-        return dynamic_cast<T*>( _variableNodes.at(name) );
+        auto it = _variableNodes.find(name);
+        if( it != _variableNodes.end() ){
+            return dynamic_cast<T*>( it->second );
+        }
+        return nullptr;
     }
     
 public:
@@ -90,10 +99,11 @@ public:
     
     /**
      * アニメーションの再生予約
-     * @exsample
-     *	runAnimation("TimeLine01");
-     *	reserveAnimation("TimeLine02");
-     *	reserveAnimation("TimeLine03");
+     @code
+     runAnimation("TimeLine01");
+     reserveAnimation("TimeLine02");
+     reserveAnimation("TimeLine03");
+     @endcode
      */
     void reserveAnimation(const char* pName);
     
@@ -112,12 +122,24 @@ public:
      */
     inline const char* getLastCompletedAnimationSequenceNamed() const { return _lastCompletedAnimationSequenceNamed; }
     
+    /**
+     * 再生後自動破棄設定
+     */
+    void autoReleaseWithAnimation();
+    
+    /**
+     * アニメーション終了時のコールバック
+     */
+    typedef std::function<void(const char*)> ccbAnimationCompleteCallback;
+    ccbAnimationCompleteCallback onAnimationCompleteCallback;
+    
 private:
     Map<std::string, Node*> _variableNodes;
     cocosbuilder::CCBAnimationManager* _animationManager;
     const char* _lastCompletedAnimationSequenceNamed;
     const char* _runningAnimationName;
     std::queue<const char*> _reservedAnimationNames;
+    bool _autoReleaseWithAnimation;
 };
 
 

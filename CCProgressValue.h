@@ -2,12 +2,10 @@
  Copyright (c) Yassy
  https://github.com/yassy0413/cocos2dx-3.x-util
  ****************************************************************************/
-#ifndef __CC_PROGRESSIVE_VALUE_H__
-#define __CC_PROGRESSIVE_VALUE_H__
+#ifndef __CC_PROGRESS_VALUE_H__
+#define __CC_PROGRESS_VALUE_H__
 
 #include "cocos2d.h"
-#include "ExtensionMacros.h"
-#include <codecvt>
 
 
 NS_CC_EXT_BEGIN
@@ -16,20 +14,20 @@ NS_CC_EXT_BEGIN
  * 進行値
  */
 template <class T>
-class ProgressiveNumber
+class ProgressNumber
 : public Ref
 {
 public:
-    typedef ProgressiveNumber<T> SelfType;
+    typedef ProgressNumber<T> SelfType;
     typedef T ValueType;
     
-    ProgressiveNumber(Scheduler* scheduler = nullptr)
+    ProgressNumber(Scheduler* scheduler = nullptr)
     : onValueUpdated(nullptr)
     , _scheduler(scheduler)
     , _scheduling(false)
     {}
     
-    virtual ~ProgressiveNumber(){
+    virtual ~ProgressNumber(){
         unscheduleUpdate();
     }
     
@@ -138,8 +136,8 @@ public:
      * 値更新コールバック
      @code
      onValueUpdated = [](cocos2d::Ref* sender){
-     auto value = static_cast<ProgressiveNumber<int>*>(sender);
-     if(!value->isBusy()){ CCLOG("Finished!"); }
+        auto value = static_cast<ProgressNumber<int>*>(sender);
+        if(!value->isBusy()){ CCLOG("Finished!"); }
      };
      @endcode
      */
@@ -173,20 +171,20 @@ private:
 /**
  * 進行文字列
  */
-class ProgressiveText
-: public ProgressiveNumber<int>
+class ProgressText
+: public ProgressNumber<int>
 {
 public:
     
-    ProgressiveText(Scheduler* scheduler = nullptr)
-    : ProgressiveNumber(scheduler)
+    ProgressText(Scheduler* scheduler = nullptr)
+    : ProgressNumber(scheduler)
     {}
     
     /**
      * 文字列を設定し、１秒間あたりの指定速度で少しずつ増えていき完成するオブジェクトを作成
      */
-    static ProgressiveText* createTextWithSpeed(const std::string& text, float speedPerSecond, Scheduler* scheduler = nullptr){
-        ProgressiveText *value = new (std::nothrow) ProgressiveText(scheduler);
+    static ProgressText* createTextWithSpeed(const std::string& text, float speedPerSecond, Scheduler* scheduler = nullptr){
+        ProgressText *value = new (std::nothrow) ProgressText(scheduler);
         if (value){
             value->autorelease();
             value->setTextWithSpeed(text, speedPerSecond);
@@ -198,8 +196,8 @@ public:
     /**
      * 文字列を設定し、指定秒数まで少しずつ増えていき完成するオブジェクトを作成
      */
-    static ProgressiveText* createTextWithSeconds(const std::string& text, float seconds, Scheduler* scheduler = nullptr){
-        ProgressiveText *value = new (std::nothrow) ProgressiveText(scheduler);
+    static ProgressText* createTextWithSeconds(const std::string& text, float seconds, Scheduler* scheduler = nullptr){
+        ProgressText *value = new (std::nothrow) ProgressText(scheduler);
         if (value){
             value->autorelease();
             value->setTextWithSeconds(text, seconds);
@@ -238,20 +236,20 @@ private:
 /**
  * 進行文字列(Wide)
  */
-class ProgressiveTextW
-: public ProgressiveNumber<int>
+class ProgressTextW
+: public ProgressNumber<int>
 {
 public:
     
-    ProgressiveTextW(Scheduler* scheduler = nullptr)
-    : ProgressiveNumber(scheduler)
+    ProgressTextW(Scheduler* scheduler = nullptr)
+    : ProgressNumber(scheduler)
     {}
     
     /**
      * 文字列を設定し、１秒間あたりの指定速度で少しずつ増えていき完成するオブジェクトを作成
      */
-    static ProgressiveTextW* createTextWithSpeed(const std::string& text, float speedPerSecond, Scheduler* scheduler = nullptr){
-        ProgressiveTextW *value = new (std::nothrow) ProgressiveTextW(scheduler);
+    static ProgressTextW* createTextWithSpeed(const std::string& text, float speedPerSecond, Scheduler* scheduler = nullptr){
+        ProgressTextW *value = new (std::nothrow) ProgressTextW(scheduler);
         if (value){
             value->autorelease();
             value->setTextWithSpeed(text, speedPerSecond);
@@ -263,8 +261,8 @@ public:
     /**
      * 文字列を設定し、指定秒数まで少しずつ増えていき完成するオブジェクトを作成
      */
-    static ProgressiveTextW* createTextWithSeconds(const std::string& text, float seconds, Scheduler* scheduler = nullptr){
-        ProgressiveTextW *value = new (std::nothrow) ProgressiveTextW(scheduler);
+    static ProgressTextW* createTextWithSeconds(const std::string& text, float seconds, Scheduler* scheduler = nullptr){
+        ProgressTextW *value = new (std::nothrow) ProgressTextW(scheduler);
         if (value){
             value->autorelease();
             value->setTextWithSeconds(text, seconds);
@@ -277,7 +275,7 @@ public:
      * 文字列を設定し、１秒間あたりの指定速度で少しずつ増えていき完成する
      */
     void setTextWithSpeed(const std::string& text, float speedPerSecond){
-        _text = ConvType().from_bytes( text );
+        cocos2d::StringUtils::UTF8ToUTF16(text, _text);
         setWithSpeed(0, _text.size(), speedPerSecond);
     }
     
@@ -285,7 +283,7 @@ public:
      * 文字列を設定し、指定秒数まで少しずつ増えていき完成する
      */
     void setTextWithSeconds(const std::string& text, float seconds){
-        _text = ConvType().from_bytes( text );
+        cocos2d::StringUtils::UTF8ToUTF16(text, _text);
         setWithSeconds(0, _text.size(), seconds);
     }
     
@@ -293,12 +291,13 @@ public:
      * 現在の文字列を取得
      */
     std::string getText() const {
-        return ConvType().to_bytes( _text.substr(0, get()) );
+        std::string result;
+        cocos2d::StringUtils::UTF16ToUTF8(_text.substr(0, get()), result);
+        return result;
     }
     
 private:
-    typedef std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> ConvType;
-    ConvType::wide_string _text;
+    std::u16string _text;
 };
 
 NS_CC_EXT_END
