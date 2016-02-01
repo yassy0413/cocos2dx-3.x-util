@@ -20,6 +20,7 @@ class CCBNode
 , public cocosbuilder::CCBMemberVariableAssigner
 , public cocosbuilder::CCBSelectorResolver
 , public cocosbuilder::CCBAnimationManagerDelegate
+, public cocosbuilder::NodeLoaderListener
 {
 public:
     CCBNode();
@@ -40,6 +41,13 @@ public:
      */
     static const char* DEFAULT_ANIMATION_NAME;
     
+    /**
+     * 初期化完了時のコールバック
+     */
+    typedef std::function<void()> nodeLoaderCompleteCallback;
+    nodeLoaderCompleteCallback onNodeLoaderCompleteCallback;
+    
+public:
     
     // cocosbuilder::CCBMemberVariableAssigner
     virtual bool onAssignCCBMemberVariable(Ref* target, const char* memberVariableName, Node* node) override;
@@ -53,12 +61,15 @@ public:
     // cocosbuilder::CCBAnimationManagerDelegate
     virtual void completedAnimationSequenceNamed(const char *name) override;
     
+    // cocosbuilder::NodeLoaderListener
+    virtual void onNodeLoaded(cocos2d::Node * pNode, cocosbuilder::NodeLoader * pNodeLoader) override;
+    
 public:
     
     /**
      * ノードを検索
      */
-    inline Node* getVariable(const char* name) const {
+    inline Node* getVariable(const char* name) const noexcept {
         return _variableNodes.at(name);
     }
     
@@ -66,7 +77,7 @@ public:
      * ノードを指定の型として検索
      */
     template <class T>
-    inline T* getVariableAs(const char* name) const {
+    inline T* getVariableAs(const char* name) const noexcept {
         CC_ASSERT( dynamic_cast<T*>( _variableNodes.at(name) ) );
         return reinterpret_cast<T*>( _variableNodes.at(name) );
     }
@@ -75,7 +86,7 @@ public:
      * ノードを指定の型として検索。対象の型が違うか、ノードが見つからない場合はnullを返す
      */
     template <class T>
-    inline T* getSafeVariableAs(const char* name) const {
+    inline T* getSafeVariableAs(const char* name) const noexcept {
         auto it = _variableNodes.find(name);
         if( it != _variableNodes.end() ){
             return dynamic_cast<T*>( it->second );

@@ -30,7 +30,8 @@ CCBNode* CCBNode::createFromFile(const char* ccbiFileName){
 }
 
 CCBNode::CCBNode()
-: onAnimationCompleteCallback(nullptr)
+: onNodeLoaderCompleteCallback(nullptr)
+, onAnimationCompleteCallback(nullptr)
 , _animationManager(nullptr)
 , _lastCompletedAnimationSequenceNamed("")
 , _runningAnimationName("")
@@ -42,8 +43,8 @@ CCBNode::~CCBNode()
 
 bool CCBNode::onAssignCCBMemberVariable(Ref* target, const char* memberVariableName, Node* node){
     if( target == this ){
-        CCLOG("CCBNode: add variable member [%s]", memberVariableName);
-        CC_ASSERT( _variableNodes.find(memberVariableName) == _variableNodes.end() ); // duplicated
+        //CCLOG("CCBNode: add variable member [%s]", memberVariableName);
+        CCASSERT( _variableNodes.find(memberVariableName) == _variableNodes.end(), memberVariableName ); // duplicated
         _variableNodes.insert( memberVariableName, node );
         return true;
     }
@@ -84,6 +85,12 @@ void CCBNode::completedAnimationSequenceNamed(const char *name){
             _reservedAnimationNames.pop();
             runAnimation(_runningAnimationName);
         }
+    }
+}
+
+void CCBNode::onNodeLoaded(cocos2d::Node * pNode, cocosbuilder::NodeLoader * pNodeLoader){
+    if( onNodeLoaderCompleteCallback ){
+        onNodeLoaderCompleteCallback();
     }
 }
 
