@@ -28,6 +28,12 @@ public:
     
     /**
      * ValueからJSONオブジェクトを生成する
+     * @doc 文字列のコピーは行わない
+     */
+    static Json* createFromStrInsitu(const char* str);
+    
+    /**
+     * ValueからJSONオブジェクトを生成する
      */
     static Json* createFromValue(const Value& value);
     
@@ -39,7 +45,7 @@ public:
     /**
      * JSON形式の整形された文字列を取得
      */
-    const char* getPrettyString();
+    const char* getPrettyString(char indentChar = ' ', uint32_t indentCharCount = 2);
     
     /**
      * Valueを生成
@@ -52,7 +58,7 @@ CC_CONSTRUCTOR_ACCESS:
     virtual ~Json();
     
     virtual bool initFromValue(const Value& value);
-    virtual bool initFromStr(const char* str);
+    virtual bool initFromStr(const char* str, bool insitu);
     
 private:
     rapidjson::Document* _document;

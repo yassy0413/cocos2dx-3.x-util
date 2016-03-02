@@ -13,7 +13,17 @@ NS_CC_EXT_BEGIN
 
 Json* Json::createFromStr(const char* str){
     auto p = new (std::nothrow) Json();
-    if( p->initFromStr(str) ){
+    if( p->initFromStr(str, false) ){
+        p->autorelease();
+        return p;
+    }
+    delete p;
+    return nullptr;
+}
+
+Json* Json::createFromStrInsitu(const char* str){
+    auto p = new (std::nothrow) Json();
+    if( p->initFromStr(str, true) ){
         p->autorelease();
         return p;
     }
@@ -41,10 +51,17 @@ Json::~Json(){
     delete _document;
 }
 
-bool Json::initFromStr(const char* str){
+bool Json::initFromStr(const char* str, bool insitu){
     delete _document;
     _document = new (std::nothrow) rapidjson::Document();
-    if( _document->Parse<rapidjson::kParseDefaultFlags>(str).HasParseError() ){
+    
+    if( insitu ){
+        _document->ParseInsitu<rapidjson::kParseDefaultFlags>(const_cast<char*>(str));
+    }else{
+        _document->Parse<rapidjson::kParseDefaultFlags>(str);
+    }
+    
+    if( _document->HasParseError() ){
         CCLOG("JsonParseError [%s]", _document->GetParseError());
         return false;
     }
@@ -129,14 +146,14 @@ const char* Json::getString(){
     return _stringBuffer->GetString();
 }
 
-const char* Json::getPrettyString(){
+const char* Json::getPrettyString(char indentChar, uint32_t indentCharCount){
     CC_ASSERT(_document);
     
     delete _stringBuffer;
     _stringBuffer = new (std::nothrow) rapidjson::StringBuffer();
     
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer( *_stringBuffer );
-    writer.SetIndent( ' ', 2 );
+    writer.SetIndent( indentChar, indentCharCount );
     _document->Accept( writer );
     
     return _stringBuffer->GetString();
