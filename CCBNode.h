@@ -134,6 +134,13 @@ public:
     inline const char* getLastCompletedAnimationSequenceNamed() const { return _lastCompletedAnimationSequenceNamed; }
     
     /**
+     * 最後に再生したアニメーション名を取得
+     */
+    inline const char* getLastRunAnimationName() const {
+        return isRunningAnimation()? _runningAnimationName : _lastCompletedAnimationSequenceNamed ;
+    }
+    
+    /**
      * 再生後自動破棄設定
      */
     void autoReleaseWithAnimation();
@@ -151,6 +158,19 @@ private:
     const char* _runningAnimationName;
     std::queue<const char*> _reservedAnimationNames;
     bool _autoReleaseWithAnimation;
+    
+    /**
+     * アニメーション再生終了コールバックの受け取り代理
+     */
+    class AnimationCallbackProxy
+    : public Ref
+    , public cocosbuilder::CCBAnimationManagerDelegate
+    {
+    public:
+        virtual void completedAnimationSequenceNamed(const char *name) override;
+        cocosbuilder::CCBAnimationManagerDelegate* _delegate;
+    };
+    AnimationCallbackProxy _animationCallbackProxy;
 };
 
 

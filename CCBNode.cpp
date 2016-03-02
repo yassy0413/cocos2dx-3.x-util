@@ -12,7 +12,9 @@ CCBNode* CCBNode::create(cocosbuilder::CCBReader * ccbReader){
     CCBNode* pRet = new (std::nothrow) CCBNode();
     if( pRet && pRet->init() ){
         pRet->autorelease();
+        pRet->_animationCallbackProxy._delegate = pRet;
         pRet->_animationManager = ccbReader->getAnimationManager();
+        pRet->_animationManager->setDelegate( &pRet->_animationCallbackProxy );
         return pRet;
     }
     delete pRet;
@@ -43,7 +45,6 @@ CCBNode::~CCBNode()
 
 bool CCBNode::onAssignCCBMemberVariable(Ref* target, const char* memberVariableName, Node* node){
     if( target == this ){
-        //CCLOG("CCBNode: add variable member [%s]", memberVariableName);
         CCASSERT( _variableNodes.find(memberVariableName) == _variableNodes.end(), memberVariableName ); // duplicated
         _variableNodes.insert( memberVariableName, node );
         return true;
@@ -86,6 +87,10 @@ void CCBNode::completedAnimationSequenceNamed(const char *name){
             runAnimation(_runningAnimationName);
         }
     }
+}
+
+void CCBNode::AnimationCallbackProxy::completedAnimationSequenceNamed(const char *name){
+    _delegate->completedAnimationSequenceNamed(name);
 }
 
 void CCBNode::onNodeLoaded(cocos2d::Node * pNode, cocosbuilder::NodeLoader * pNodeLoader){
