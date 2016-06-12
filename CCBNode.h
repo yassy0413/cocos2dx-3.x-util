@@ -12,7 +12,7 @@
 
 NS_CC_EXT_BEGIN
 
-/*
+/**
  * 汎用CCBNodeアクセッサ
  */
 class CCBNode

@@ -10,7 +10,7 @@
 
 NS_CC_EXT_BEGIN
 
-/*
+/**
  * 進行値
  */
 template <class T>

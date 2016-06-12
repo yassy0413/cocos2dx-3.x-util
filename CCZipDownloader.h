@@ -22,7 +22,7 @@ NS_CC_EXT_BEGIN
 class ZipDownloader;
 typedef std::function<void(const std::string& url, const void* data)> ccZipDownloaderCallback;
 
-/*
+/**
  * zipファイルのダウンロードと展開
  *
  * @exsample ZipDownloader::getInstance()->download("http://localhost/test.zip", myCallback);

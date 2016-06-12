@@ -19,7 +19,7 @@ NS_CC_EXT_BEGIN
 
 typedef std::function<void(Sprite* sprite)> ccLazySpriteCallback;
 
-/*
+/**
  * テクスチャの読み込みを非同期で行い、完了時に自身へ適用するスプライト
  */
 class LazySprite

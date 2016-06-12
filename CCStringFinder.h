@@ -11,7 +11,7 @@
 
 NS_CC_EXT_BEGIN
 
-/*
+/**
  * 文字列選択
  */
 class StringFinder

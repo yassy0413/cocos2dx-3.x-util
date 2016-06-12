@@ -10,7 +10,7 @@
 
 NS_CC_EXT_BEGIN
 
-/*
+/**
  * ファイル検索
  */
 class PathFinder

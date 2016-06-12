@@ -11,7 +11,7 @@
 
 NS_CC_EXT_BEGIN
 
-/*
+/**
  * Convert ControlEvent to Callback Functor
  */
 class ControlEventListener
