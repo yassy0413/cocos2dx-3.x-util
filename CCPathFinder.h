@@ -37,6 +37,8 @@ public:
     struct Stat {
         bool isDir;
         std::string path;
+        
+        Stat(bool d, const char* p);
     };
     typedef std::vector<PathFinder::Stat> StatList;
     

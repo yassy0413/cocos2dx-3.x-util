@@ -43,6 +43,11 @@ PathFinder::PathFinder()
 PathFinder::~PathFinder(){
 }
 
+PathFinder::Stat::Stat(bool d, const char* p)
+: isDir(d)
+, path(p)
+{}
+
 #pragma mark --
 
 void PathFinder::setCurrentDirectory(const std::string& path){
@@ -97,15 +102,10 @@ void PathFinder::readDirectory(std::string path, PathFinder::StatList& out){
     WIN32_FIND_DATAA win32fd;
     HANDLE hFind = FindFirstFileA((rootpath + "\\*.*").c_str(), &win32fd);
     if( hFind != INVALID_HANDLE_VALUE ){
-        do
-        {
-            Stat stat_;
-            stat_.path = win32fd.cFileName;
-            stat_.isDir = (win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-            
-            out.emplace_back( std::move(stat_) );
-            
-        }while( FindNextFileA(hFind, &win32fd) );
+        do {
+            out.emplace_back( (win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0, win32fd.cFileName );
+        }
+        while( FindNextFileA(hFind, &win32fd) );
         
         FindClose(hFind);
     }
@@ -115,12 +115,7 @@ void PathFinder::readDirectory(std::string path, PathFinder::StatList& out){
         for( dirent* entry = readdir(dir); entry != NULL; entry = readdir(dir) ){
             const std::string fullpath_( rootpath + "/" + entry->d_name );
             lstat( fullpath_.c_str(), &statbuf );
-            
-            Stat stat_;
-            stat_.path = entry->d_name;
-            stat_.isDir = S_ISDIR(statbuf.st_mode);
-            
-            out.emplace_back( std::move(stat_) );
+            out.emplace_back( S_ISDIR(statbuf.st_mode), entry->d_name );
         }
         closedir( dir );
     }
