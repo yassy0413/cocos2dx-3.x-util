@@ -3,7 +3,7 @@
  https://github.com/yassy0413/cocos2dx-3.x-util
  ****************************************************************************/
 #include "CCLazySprite.h"
-#include "HttpClient.h"
+#include "network/HttpClient.h"
 
 NS_CC_EXT_BEGIN
 

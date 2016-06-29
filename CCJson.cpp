@@ -62,7 +62,7 @@ bool Json::initFromStr(const char* str, bool insitu){
     }
     
     if( _document->HasParseError() ){
-        CCLOG("JsonParseError [%s]", _document->GetParseError());
+        CCLOG("JsonParseError [%d]", _document->GetParseError());
         return false;
     }
     return true;
@@ -114,7 +114,7 @@ bool Json::initFromValue(const Value& value){
             for( const auto& vv : in.asValueMap() ){
                 rapidjson::Value v;
                 convert[ static_cast<int>(vv.second.getType()) ]( document, vv.second, v );
-                out.AddMember( vv.first.c_str(), v, document.GetAllocator() );
+                out.AddMember( rapidjson::StringRef(vv.first.c_str()), v, document.GetAllocator() );
             }
         },
         // INT_KEY_MAP
@@ -178,7 +178,7 @@ Value Json::getValue() const {
         // kObjectType
         [](const rapidjson::Value& in){
             ValueMap result;
-            for( rapidjson::Value::ConstMemberIterator it = in.MemberonBegin(); it != in.MemberonEnd(); ++it ){
+            for( auto it = in.MemberBegin(); it != in.MemberEnd(); ++it ){
                 result.emplace( it->name.GetString(), convert[ it->value.GetType() ]( it->value ) );
             }
             return Value( std::move(result) );

@@ -7,8 +7,21 @@
 
 #include "cocos2d.h"
 #include "cocos-ext.h"
-#include "cocosbuilder/CocosBuilder.h"
+#include "editor-support/cocosbuilder/CocosBuilder.h"
+
 #include <queue>
+
+#define DECLARE_CCB_LAYER_LOADER(T) \
+    class T##Loader : public cocosbuilder::LayerLoader { \
+        public:		CCB_STATIC_NEW_AUTORELEASE_OBJECT_METHOD(T##Loader, loader); \
+        protected:	CCB_VIRTUAL_NEW_AUTORELEASE_CREATECCNODE_METHOD(T); \
+    };
+#define DECLARE_CCB_NODE_LOADER(T) \
+    class T##Loader : public cocosbuilder::NodeLoader { \
+        public:		CCB_STATIC_NEW_AUTORELEASE_OBJECT_METHOD(T##Loader, loader); \
+        protected:	CCB_VIRTUAL_NEW_AUTORELEASE_CREATECCNODE_METHOD(T); \
+    };
+
 
 NS_CC_EXT_BEGIN
 
