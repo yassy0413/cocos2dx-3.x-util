@@ -133,6 +133,13 @@ public:
     }
     
     /**
+     * 進行率の取得
+     */
+    float getRate() const {
+        return _rate;
+    }
+    
+    /**
      * 値更新コールバック
      @code
      onValueUpdated = [](cocos2d::Ref* sender){
