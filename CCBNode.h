@@ -36,13 +36,9 @@ class CCBNode
 , public cocosbuilder::NodeLoaderListener
 {
 public:
+    CREATE_FUNC(CCBNode);
     CCBNode();
     virtual ~CCBNode();
-    
-    /*
-     * Custom CREATE_FUNC
-     */
-    static CCBNode* create(cocosbuilder::CCBReader* ccbReader);
     
     /**
      * CCBReaderから作成されたインスタンスを作成する
@@ -76,6 +72,9 @@ public:
     
     // cocosbuilder::NodeLoaderListener
     virtual void onNodeLoaded(cocos2d::Node * pNode, cocosbuilder::NodeLoader * pNodeLoader) override;
+    
+    // cocos2d::Node
+    virtual void setUserObject(cocos2d::Ref *userObject) override;
     
 public:
     
@@ -120,6 +119,11 @@ public:
      * アニメーションの再生
      */
     void runAnimation(const char* pName, float fTweenDuration = 0.0f);
+    
+    /**
+     * アニメーションのフレーム数を取得
+     */
+    float getDuration(const char* pName) const;
     
     /**
      * アニメーションの再生予約
@@ -194,10 +198,7 @@ public:
     virtual ~CCBNodeLoader() {};
     CCB_STATIC_NEW_AUTORELEASE_OBJECT_METHOD(CCBNodeLoader, loader);
 protected:
-    /**
-     * Custom CCB_VIRTUAL_NEW_AUTORELEASE_CREATECCNODE_METHOD
-     */
-    virtual CCBNode* createNode(cocos2d::Node * pParent, cocosbuilder::CCBReader * ccbReader) { return CCBNode::create(ccbReader); }
+    CCB_VIRTUAL_NEW_AUTORELEASE_CREATECCNODE_METHOD(CCBNode);
 };
 
 NS_CC_EXT_END

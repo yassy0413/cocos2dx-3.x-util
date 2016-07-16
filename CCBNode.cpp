@@ -8,20 +8,6 @@ NS_CC_EXT_BEGIN
 
 const char* CCBNode::DEFAULT_ANIMATION_NAME = "Default Timeline";
 
-CCBNode* CCBNode::create(cocosbuilder::CCBReader * ccbReader){
-    CCBNode* pRet = new (std::nothrow) CCBNode();
-    if( pRet && pRet->init() ){
-        pRet->autorelease();
-        pRet->_animationCallbackProxy._delegate = pRet;
-        pRet->_animationManager = ccbReader->getAnimationManager();
-        pRet->_animationManager->setDelegate( &pRet->_animationCallbackProxy );
-        return pRet;
-    }
-    delete pRet;
-    return nullptr;
-}
-
-
 CCBNode* CCBNode::createFromFile(const char* ccbiFileName){
     CCASSERT( FileUtils::getInstance()->isFileExist(ccbiFileName), ccbiFileName );
     auto reader = new (std::nothrow) cocosbuilder::CCBReader( cocosbuilder::NodeLoaderLibrary::getInstance() );
@@ -38,7 +24,9 @@ CCBNode::CCBNode()
 , _lastCompletedAnimationSequenceNamed("")
 , _runningAnimationName("")
 , _autoReleaseWithAnimation(false)
-{}
+{
+    _animationCallbackProxy._delegate = this;
+}
 
 CCBNode::~CCBNode()
 {}
@@ -99,11 +87,25 @@ void CCBNode::onNodeLoaded(cocos2d::Node * pNode, cocosbuilder::NodeLoader * pNo
     }
 }
 
+void CCBNode::setUserObject(cocos2d::Ref *userObject){
+    if( auto p = dynamic_cast<cocosbuilder::CCBAnimationManager*>(userObject) ){
+        _animationManager = p;
+        _animationManager->setDelegate( &_animationCallbackProxy );
+    }
+    cocos2d::Node::setUserObject(userObject);
+}
+
 void CCBNode::runAnimation(const char* pName, float fTweenDuration){
     CC_ASSERT(pName);
     _runningAnimationName = pName;
     CC_ASSERT(_animationManager);
     _animationManager->runAnimationsForSequenceNamedTweenDuration(pName, fTweenDuration);
+}
+
+float CCBNode::getDuration(const char* pName) const{
+    CC_ASSERT(pName);
+    CC_ASSERT(_animationManager);
+    return _animationManager->getSequenceDuration(pName);
 }
 
 void CCBNode::reserveAnimation(const char* pName){
