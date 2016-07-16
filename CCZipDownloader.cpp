@@ -3,7 +3,7 @@
  https://github.com/yassy0413/cocos2dx-3.x-util
  ****************************************************************************/
 #include "CCZipDownloader.h"
-#include "HttpClient.h"
+#include "network/HttpClient.h"
 
 NS_CC_EXT_BEGIN
 
@@ -52,12 +52,12 @@ ZipDownloader::~ZipDownloader(){
 
 #pragma mark -- Download Work
 
-void ZipDownloader::download(const std::string& url, const ccZipDownloaderCallback& callback){
+void ZipDownloader::download(const std::string& url, ccZipDownloaderCallback callback){
     
     ++_numWorkingTask;
     
-    DownloadUnit* pUnit = new DownloadUnit();
-    pUnit->_pCallback = new ccZipDownloaderCallback( callback );
+    auto pUnit = new DownloadUnit();
+    pUnit->_callback = callback;
     pUnit->_url = url;
     
     _downloadQueueMutex.lock();
@@ -88,11 +88,11 @@ void ZipDownloader::downloadThread(){
         }
         
         // HttpRequest の発行
-        network::HttpRequest* req = new network::HttpRequest();
+        auto req = new network::HttpRequest();
         req->setRequestType( network::HttpRequest::Type::GET );
         req->setUrl( pUnit->_url.c_str() );
         req->setResponseCallback( CC_CALLBACK_2(ZipDownloader::httpRequestCallback, this) );
-        req->setUserData( pUnit->_pCallback );
+        req->setUserData( pUnit );
         
         ++_numWorkingDownloadTask;
         network::HttpClient::getInstance()->sendImmediate( req );
@@ -109,13 +109,16 @@ void ZipDownloader::httpRequestCallback(network::HttpClient* client, network::Ht
     
     --_numWorkingDownloadTask;
     
-    UnzipUnit* pUnit = new UnzipUnit();
-    pUnit->_pCallback = (ccZipDownloaderCallback*)response->getHttpRequest()->getUserData();
+    auto pUnit = new UnzipUnit();
     pUnit->_url = response->getHttpRequest()->getUrl();
     pUnit->_data = &response->getResponseData()->at(0);
     pUnit->_datasize = response->getResponseData()->size();
     pUnit->_pHttpResponse = response;
     pUnit->_pHttpResponse->retain();
+    
+    auto dlUnit = (DownloadUnit*)response->getHttpRequest()->getUserData();
+    pUnit->_callback = dlUnit->_callback;
+    delete dlUnit;
     
     _downloadedDataSize += pUnit->_datasize;
     
@@ -127,16 +130,16 @@ void ZipDownloader::httpRequestCallback(network::HttpClient* client, network::Ht
 
 #pragma mark -- Unzip Work
 
-void ZipDownloader::unzip(const std::string& url, const void* data, ssize_t datasize, const ccZipDownloaderCallback& callback){
+void ZipDownloader::unzip(const std::string& url, const void* data, ssize_t datasize, ccZipDownloaderCallback callback){
     
     ++_numWorkingTask;
     
     UnzipUnit* pUnit = new UnzipUnit();
-    pUnit->_pCallback = new ccZipDownloaderCallback( callback );
     pUnit->_url = url;
     pUnit->_data = data;
     pUnit->_datasize = datasize;
     pUnit->_pHttpResponse = nullptr;
+    pUnit->_callback = callback;
     
     _downloadedDataSize += pUnit->_datasize;
     
@@ -221,8 +224,9 @@ void ZipDownloader::dispatchResponseCallbacks(){
     _responseQueueMutex.unlock();
     
     if( pUnit ){
-        CC_ASSERT(pUnit->_pCallback);
-        (*pUnit->_pCallback)( pUnit->_url, pUnit->_data );
+        if( pUnit->_callback ){
+            pUnit->_callback( pUnit->_url, pUnit->_data );
+        }
         delete pUnit;
     }
     
@@ -230,7 +234,6 @@ void ZipDownloader::dispatchResponseCallbacks(){
 }
 
 ZipDownloader::UnzipUnit::~UnzipUnit(){
-    delete _pCallback;
     if( _pHttpResponse ){
         _pHttpResponse->release();
     }

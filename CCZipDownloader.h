@@ -25,7 +25,9 @@ typedef std::function<void(const std::string& url, const void* data)> ccZipDownl
 /**
  * zipファイルのダウンロードと展開
  *
- * @exsample ZipDownloader::getInstance()->download("http://localhost/test.zip", myCallback);
+ @code
+ ZipDownloader::getInstance()->download("http://localhost/test.zip", myCallback);
+ @endcode
  */
 class ZipDownloader
 {
@@ -39,13 +41,13 @@ public:
     /**
      * urlで指定されたzipファイルをダウンロードし、WritablePathへ展開する
      */
-    void download(const std::string& url, const ccZipDownloaderCallback& callback);
+    void download(const std::string& url, ccZipDownloaderCallback callback);
     
     /**
      * dataで指定されたzipのバイナリデータを、WritablePathへ展開する
      * @param url 未使用。コールバックで渡されるのみ
      */
-    void unzip(const std::string& url, const void* data, ssize_t datasize, const ccZipDownloaderCallback& callback);
+    void unzip(const std::string& url, const void* data, ssize_t datasize, ccZipDownloaderCallback callback);
     
     /**
      * 実行中のタスク数を取得
@@ -74,12 +76,12 @@ private:
     void dispatchResponseCallbacks();
     
     struct DownloadUnit {
-        ccZipDownloaderCallback* _pCallback;
+        ccZipDownloaderCallback _callback;
         std::string _url;
     };
     
     struct UnzipUnit {
-        ccZipDownloaderCallback* _pCallback;
+        ccZipDownloaderCallback _callback;
         network::HttpResponse* _pHttpResponse;
         std::string _url;
         const void* _data;
