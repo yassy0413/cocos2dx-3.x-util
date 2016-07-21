@@ -56,6 +56,12 @@ public:
     typedef std::function<void()> nodeLoaderCompleteCallback;
     nodeLoaderCompleteCallback onNodeLoaderCompleteCallback;
     
+    /**
+     * CallFuncのコールバック
+     */
+    typedef std::function<void(const std::string& name)> funcCallback;
+    funcCallback onFuncCallback;
+    
 public:
     
     // cocosbuilder::CCBMemberVariableAssigner
@@ -63,9 +69,9 @@ public:
     virtual bool onAssignCCBCustomProperty(Ref* target, const char* memberVariableName, const Value& value) override;
     
     // cocosbuilder::CCBSelectorResolver
-    virtual SEL_MenuHandler onResolveCCBCCMenuItemSelector(Ref * pTarget, const char* pSelectorName) override;
-    virtual SEL_CallFuncN onResolveCCBCCCallFuncSelector(Ref * pTarget, const char* pSelectorName) override;
-    virtual Control::Handler onResolveCCBCCControlSelector(Ref * pTarget, const char* pSelectorName) override;
+    virtual SEL_MenuHandler onResolveCCBCCMenuItemSelector(Ref* pTarget, const char* pSelectorName) override;
+    virtual SEL_CallFuncN onResolveCCBCCCallFuncSelector(Ref* pTarget, const char* pSelectorName) override;
+    virtual Control::Handler onResolveCCBCCControlSelector(Ref* pTarget, const char* pSelectorName) override;
     
     // cocosbuilder::CCBAnimationManagerDelegate
     virtual void completedAnimationSequenceNamed(const char *name) override;
@@ -74,7 +80,7 @@ public:
     virtual void onNodeLoaded(cocos2d::Node * pNode, cocosbuilder::NodeLoader * pNodeLoader) override;
     
     // cocos2d::Node
-    virtual void setUserObject(cocos2d::Ref *userObject) override;
+    virtual void setUserObject(cocos2d::Ref* userObject) override;
     
 public:
     
@@ -176,6 +182,8 @@ private:
     std::queue<const char*> _reservedAnimationNames;
     bool _autoReleaseWithAnimation;
     
+    void registerFuncCallBack(Node*);
+    
     /**
      * アニメーション再生終了コールバックの受け取り代理
      */
@@ -188,6 +196,13 @@ private:
         cocosbuilder::CCBAnimationManagerDelegate* _delegate;
     };
     AnimationCallbackProxy _animationCallbackProxy;
+    
+    /**
+     * 関数コールバック
+     */
+    typedef std::vector< std::pair<std::string, funcCallback> >  FuncCallList;
+    FuncCallList _funcCallList;
+    FuncCallList::iterator _itFuncCallList;
 };
 
 

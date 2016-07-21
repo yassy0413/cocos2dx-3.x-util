@@ -20,6 +20,7 @@ CCBNode* CCBNode::createFromFile(const char* ccbiFileName){
 CCBNode::CCBNode()
 : onNodeLoaderCompleteCallback(nullptr)
 , onAnimationCompleteCallback(nullptr)
+, onFuncCallback(nullptr)
 , _animationManager(nullptr)
 , _lastCompletedAnimationSequenceNamed("")
 , _runningAnimationName("")
@@ -44,15 +45,28 @@ bool CCBNode::onAssignCCBCustomProperty(Ref* target, const char* memberVariableN
     return false;
 }
 
-SEL_MenuHandler CCBNode::onResolveCCBCCMenuItemSelector(Ref * pTarget, const char* pSelectorName){
+SEL_MenuHandler CCBNode::onResolveCCBCCMenuItemSelector(Ref* pTarget, const char* pSelectorName){
     return nullptr;
 }
 
-Control::Handler CCBNode::onResolveCCBCCControlSelector(Ref * pTarget, const char* pSelectorName){
-    return nullptr;
+SEL_CallFuncN CCBNode::onResolveCCBCCCallFuncSelector(Ref* pTarget, const char* pSelectorName){
+    _funcCallList.emplace_back( std::make_pair(pSelectorName, [this](const std::string& name){
+        if( onFuncCallback ){
+            onFuncCallback( name );
+        }
+    }) );
+    _itFuncCallList = _funcCallList.begin();
+    return CC_CALLFUNCN_SELECTOR(CCBNode::registerFuncCallBack);
+}
+void CCBNode::registerFuncCallBack(Node* pTarget){
+    if( _itFuncCallList == _funcCallList.end() ){
+        _itFuncCallList = _funcCallList.begin();
+    }
+    _itFuncCallList->second( _itFuncCallList->first );
+    ++_itFuncCallList;
 }
 
-SEL_CallFuncN CCBNode::onResolveCCBCCCallFuncSelector(Ref * pTarget, const char* pSelectorName){
+Control::Handler CCBNode::onResolveCCBCCControlSelector(Ref* pTarget, const char* pSelectorName){
     return nullptr;
 }
 
@@ -87,7 +101,7 @@ void CCBNode::onNodeLoaded(cocos2d::Node * pNode, cocosbuilder::NodeLoader * pNo
     }
 }
 
-void CCBNode::setUserObject(cocos2d::Ref *userObject){
+void CCBNode::setUserObject(cocos2d::Ref* userObject){
     if( auto p = dynamic_cast<cocosbuilder::CCBAnimationManager*>(userObject) ){
         _animationManager = p;
         _animationManager->setDelegate( &_animationCallbackProxy );
