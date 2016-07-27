@@ -20,7 +20,6 @@ CCBNode* CCBNode::createFromFile(const char* ccbiFileName){
 CCBNode::CCBNode()
 : onNodeLoaderCompleteCallback(nullptr)
 , onAnimationCompleteCallback(nullptr)
-, onFuncCallback(nullptr)
 , _animationManager(nullptr)
 , _lastCompletedAnimationSequenceNamed("")
 , _runningAnimationName("")
@@ -50,20 +49,7 @@ SEL_MenuHandler CCBNode::onResolveCCBCCMenuItemSelector(Ref* pTarget, const char
 }
 
 SEL_CallFuncN CCBNode::onResolveCCBCCCallFuncSelector(Ref* pTarget, const char* pSelectorName){
-    _funcCallList.emplace_back( std::make_pair(pSelectorName, [this](const std::string& name){
-        if( onFuncCallback ){
-            onFuncCallback( name );
-        }
-    }) );
-    _itFuncCallList = _funcCallList.begin();
-    return CC_CALLFUNCN_SELECTOR(CCBNode::registerFuncCallBack);
-}
-void CCBNode::registerFuncCallBack(Node* pTarget){
-    if( _itFuncCallList == _funcCallList.end() ){
-        _itFuncCallList = _funcCallList.begin();
-    }
-    _itFuncCallList->second( _itFuncCallList->first );
-    ++_itFuncCallList;
+    return nullptr;
 }
 
 Control::Handler CCBNode::onResolveCCBCCControlSelector(Ref* pTarget, const char* pSelectorName){

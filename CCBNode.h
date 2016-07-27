@@ -56,12 +56,6 @@ public:
     typedef std::function<void()> nodeLoaderCompleteCallback;
     nodeLoaderCompleteCallback onNodeLoaderCompleteCallback;
     
-    /**
-     * CallFuncのコールバック
-     */
-    typedef std::function<void(const std::string& name)> funcCallback;
-    funcCallback onFuncCallback;
-    
 public:
     
     // cocosbuilder::CCBMemberVariableAssigner
@@ -171,7 +165,7 @@ public:
     /**
      * アニメーション終了時のコールバック
      */
-    typedef std::function<void(const char*)> ccbAnimationCompleteCallback;
+    typedef std::function<void(const std::string&)> ccbAnimationCompleteCallback;
     ccbAnimationCompleteCallback onAnimationCompleteCallback;
     
 private:
@@ -181,8 +175,6 @@ private:
     const char* _runningAnimationName;
     std::queue<const char*> _reservedAnimationNames;
     bool _autoReleaseWithAnimation;
-    
-    void registerFuncCallBack(Node*);
     
     /**
      * アニメーション再生終了コールバックの受け取り代理
@@ -197,12 +189,6 @@ private:
     };
     AnimationCallbackProxy _animationCallbackProxy;
     
-    /**
-     * 関数コールバック
-     */
-    typedef std::vector< std::pair<std::string, funcCallback> >  FuncCallList;
-    FuncCallList _funcCallList;
-    FuncCallList::iterator _itFuncCallList;
 };
 
 
