@@ -83,6 +83,10 @@ bool Json::initFromValue(const Value& value){
         [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
             out.SetInt( in.asInt() );
         },
+        // UNSIGNED
+        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
+            out.SetUint( in.asUnsignedInt() );
+        },
         // FLOAT
         [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
             out.SetDouble( in.asFloat() );
