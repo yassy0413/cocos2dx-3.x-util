@@ -203,7 +203,7 @@ Value Json::getValue() const {
         },
         // kNumberType
         [](const rapidjson::Value& in){
-            return in.IsDouble()? Value(in.GetDouble()) : Value(in.GetInt()) ;
+            return in.IsDouble()? Value(in.GetDouble()) : (in.IsUint()? Value(in.GetUint()) : Value(in.GetInt())) ;
         },
     };
     return convert[ _document->GetType() ]( *_document );
