@@ -22,8 +22,8 @@ public:
     typedef T ValueType;
     
     ProgressNumber(Scheduler* scheduler = nullptr)
-    : onValueUpdated(nullptr)
-    , onTween([](float rate){ return cocos2d::tweenfunc::linear(rate); })
+    : onTweenFunc([](float rate){ return cocos2d::tweenfunc::linear(rate); })
+    , onValueUpdated(nullptr)
     , _scheduler(scheduler)
     , _scheduling(false)
     {}
@@ -143,8 +143,8 @@ public:
     /**
      * TweenFuncの設定
      */
-    std::function<float(float rate)> ccTweenFunc;
-    ccTween onTweenFunc;
+    typedef std::function<float(float rate)> ccTweenFunc;
+    ccTweenFunc onTweenFunc;
     
     /**
      * 値更新コールバック

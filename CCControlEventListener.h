@@ -2,8 +2,8 @@
  Copyright (c) Yassy
  https://github.com/yassy0413/cocos2dx-3.x-util
  ****************************************************************************/
-#ifndef __CCControlEventListener_H__
-#define __CCControlEventListener_H__
+#ifndef __CCCONTROLEVENTLISTENER_H__
+#define __CCCONTROLEVENTLISTENER_H__
 
 #include "cocos2d.h"
 #include "cocos-ext.h"
