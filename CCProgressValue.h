@@ -23,6 +23,7 @@ public:
     
     ProgressNumber(Scheduler* scheduler = nullptr)
     : onValueUpdated(nullptr)
+    , onTween([](float rate){ return cocos2d::tweenfunc::linear(rate); })
     , _scheduler(scheduler)
     , _scheduling(false)
     {}
@@ -115,7 +116,7 @@ public:
      * 現在値を取得
      */
     T get() const {
-        return T( _from + (_to - _from) * _rate );
+        return T( _from + (_to - _from) * onTweenFunc(_rate) );
     }
     
     /**
@@ -138,6 +139,12 @@ public:
     float getRate() const {
         return _rate;
     }
+    
+    /**
+     * TweenFuncの設定
+     */
+    std::function<float(float rate)> ccTweenFunc;
+    ccTween onTweenFunc;
     
     /**
      * 値更新コールバック
