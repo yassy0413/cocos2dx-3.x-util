@@ -31,6 +31,41 @@ CCBNode::CCBNode()
 CCBNode::~CCBNode()
 {}
 
+
+void CCBNode::runAnimation(const char* pName, float fTweenDuration){
+    CC_ASSERT(pName);
+    _runningAnimationName = pName;
+    CC_ASSERT(_animationManager);
+    _animationManager->runAnimationsForSequenceNamedTweenDuration(pName, fTweenDuration);
+}
+
+float CCBNode::getDuration(const char* pName) const{
+    CC_ASSERT(pName);
+    CC_ASSERT(_animationManager);
+    return _animationManager->getSequenceDuration(pName);
+}
+
+void CCBNode::reserveAnimation(const char* pName){
+    if( !isRunningAnimation() ){
+        runAnimation(pName);
+    }else{
+        _reservedAnimationNames.push(pName);
+    }
+}
+
+void CCBNode::setStringAsLabel(const char* name, const std::string& text){
+    getVariableAs<cocos2d::Label>(name)->setString( text );
+}
+
+void CCBNode::setTextureAsSprite(const char* name, const std::string& filename){
+    getVariableAs<cocos2d::Sprite>(name)->setTexture(filename);
+}
+
+void CCBNode::setTextureAsSprite(const char* name, cocos2d::Texture2D* texture){
+    getVariableAs<cocos2d::Sprite>(name)->setTexture(texture);
+}
+
+
 bool CCBNode::onAssignCCBMemberVariable(Ref* target, const char* memberVariableName, Node* node){
     if( target == this ){
         CCASSERT( _variableNodes.find(memberVariableName) == _variableNodes.end(), memberVariableName ); // duplicated
@@ -93,27 +128,6 @@ void CCBNode::setUserObject(cocos2d::Ref* userObject){
         _animationManager->setDelegate( &_animationCallbackProxy );
     }
     cocos2d::Node::setUserObject(userObject);
-}
-
-void CCBNode::runAnimation(const char* pName, float fTweenDuration){
-    CC_ASSERT(pName);
-    _runningAnimationName = pName;
-    CC_ASSERT(_animationManager);
-    _animationManager->runAnimationsForSequenceNamedTweenDuration(pName, fTweenDuration);
-}
-
-float CCBNode::getDuration(const char* pName) const{
-    CC_ASSERT(pName);
-    CC_ASSERT(_animationManager);
-    return _animationManager->getSequenceDuration(pName);
-}
-
-void CCBNode::reserveAnimation(const char* pName){
-    if( !isRunningAnimation() ){
-        runAnimation(pName);
-    }else{
-        _reservedAnimationNames.push(pName);
-    }
 }
 
 NS_CC_EXT_END

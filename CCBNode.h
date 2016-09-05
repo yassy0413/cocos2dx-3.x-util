@@ -58,26 +58,6 @@ public:
     
 public:
     
-    // cocosbuilder::CCBMemberVariableAssigner
-    virtual bool onAssignCCBMemberVariable(Ref* target, const char* memberVariableName, Node* node) override;
-    virtual bool onAssignCCBCustomProperty(Ref* target, const char* memberVariableName, const Value& value) override;
-    
-    // cocosbuilder::CCBSelectorResolver
-    virtual SEL_MenuHandler onResolveCCBCCMenuItemSelector(Ref* pTarget, const char* pSelectorName) override;
-    virtual SEL_CallFuncN onResolveCCBCCCallFuncSelector(Ref* pTarget, const char* pSelectorName) override;
-    virtual Control::Handler onResolveCCBCCControlSelector(Ref* pTarget, const char* pSelectorName) override;
-    
-    // cocosbuilder::CCBAnimationManagerDelegate
-    virtual void completedAnimationSequenceNamed(const char *name) override;
-    
-    // cocosbuilder::NodeLoaderListener
-    virtual void onNodeLoaded(cocos2d::Node * pNode, cocosbuilder::NodeLoader * pNodeLoader) override;
-    
-    // cocos2d::Node
-    virtual void setUserObject(cocos2d::Ref* userObject) override;
-    
-public:
-    
     /**
      * ノードを検索
      */
@@ -90,7 +70,7 @@ public:
      */
     template <class T>
     inline T* getVariableAs(const char* name) const noexcept {
-        CC_ASSERT( dynamic_cast<T*>( _variableNodes.at(name) ) );
+        CCASSERT( dynamic_cast<T*>( _variableNodes.at(name) ), name );
         return reinterpret_cast<T*>( _variableNodes.at(name) );
     }
     
@@ -167,6 +147,34 @@ public:
      */
     typedef std::function<void(const std::string&)> ccbAnimationCompleteCallback;
     ccbAnimationCompleteCallback onAnimationCompleteCallback;
+    
+    
+public:// short cut
+    
+    void setStringAsLabel(const char* name, const std::string& text);
+    
+    void setTextureAsSprite(const char* name, const std::string& filename);
+    void setTextureAsSprite(const char* name, cocos2d::Texture2D* texture);
+    
+public:
+    
+    // cocosbuilder::CCBMemberVariableAssigner
+    virtual bool onAssignCCBMemberVariable(Ref* target, const char* memberVariableName, Node* node) override;
+    virtual bool onAssignCCBCustomProperty(Ref* target, const char* memberVariableName, const Value& value) override;
+    
+    // cocosbuilder::CCBSelectorResolver
+    virtual SEL_MenuHandler onResolveCCBCCMenuItemSelector(Ref* pTarget, const char* pSelectorName) override;
+    virtual SEL_CallFuncN onResolveCCBCCCallFuncSelector(Ref* pTarget, const char* pSelectorName) override;
+    virtual Control::Handler onResolveCCBCCControlSelector(Ref* pTarget, const char* pSelectorName) override;
+    
+    // cocosbuilder::CCBAnimationManagerDelegate
+    virtual void completedAnimationSequenceNamed(const char *name) override;
+    
+    // cocosbuilder::NodeLoaderListener
+    virtual void onNodeLoaded(cocos2d::Node * pNode, cocosbuilder::NodeLoader * pNodeLoader) override;
+    
+    // cocos2d::Node
+    virtual void setUserObject(cocos2d::Ref* userObject) override;
     
 private:
     Map<std::string, Node*> _variableNodes;
