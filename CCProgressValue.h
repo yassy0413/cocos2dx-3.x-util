@@ -225,7 +225,7 @@ public:
      */
     void setTextWithSpeed(const std::string& text, float speedPerSecond){
         _text = text;
-        setWithSpeed(0, _text.size(), speedPerSecond);
+        setWithSpeed(0, (int)_text.size(), speedPerSecond);
     }
     
     /**
@@ -233,7 +233,7 @@ public:
      */
     void setTextWithSeconds(const std::string& text, float seconds){
         _text = text;
-        setWithSeconds(0, _text.size(), seconds);
+        setWithSeconds(0, (int)_text.size(), seconds);
     }
     
     /**
@@ -290,7 +290,7 @@ public:
      */
     void setTextWithSpeed(const std::string& text, float speedPerSecond){
         cocos2d::StringUtils::UTF8ToUTF16(text, _text);
-        setWithSpeed(0, _text.size(), speedPerSecond);
+        setWithSpeed(0, (int)_text.size(), speedPerSecond);
     }
     
     /**
@@ -298,7 +298,7 @@ public:
      */
     void setTextWithSeconds(const std::string& text, float seconds){
         cocos2d::StringUtils::UTF8ToUTF16(text, _text);
-        setWithSeconds(0, _text.size(), seconds);
+        setWithSeconds(0, (int)_text.size(), seconds);
     }
     
     /**
