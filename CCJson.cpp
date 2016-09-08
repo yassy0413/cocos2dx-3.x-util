@@ -70,41 +70,41 @@ bool Json::initFromStr(const char* str, bool insitu){
 
 bool Json::initFromValue(const Value& value){
     
-    static const std::function<void(rapidjson::Document& document, const Value& in, rapidjson::Value& out)> convert[] = {
+    static const std::function<void(rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept> convert[] = {
         // NONE
-        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
+        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
             out.SetNull();
         },
         // BYTE
-        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
+        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
             out.SetInt( in.asByte() );
         },
         // INTEGER
-        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
+        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
             out.SetInt( in.asInt() );
         },
         // UNSIGNED
-        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
+        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
             out.SetUint( in.asUnsignedInt() );
         },
         // FLOAT
-        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
+        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
             out.SetDouble( in.asFloat() );
         },
         // DOUBLE
-        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
+        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
             out.SetDouble( in.asDouble() );
         },
         // BOOLEAN
-        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
+        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
             out.SetBool( in.asBool() );
         },
         // STRING
-        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
+        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
             out.SetString( in.asString().c_str(), static_cast<rapidjson::SizeType>(in.asString().length()) );
         },
         // VECTOR
-        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
+        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
             out.SetArray();
             for( const auto& vv : in.asValueVector() ){
                 rapidjson::Value v;
@@ -113,7 +113,7 @@ bool Json::initFromValue(const Value& value){
             }
         },
         // MAP
-        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
+        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
             out.SetObject();
             for( const auto& vv : in.asValueMap() ){
                 rapidjson::Value v;
@@ -122,7 +122,7 @@ bool Json::initFromValue(const Value& value){
             }
         },
         // INT_KEY_MAP
-        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out){
+        [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
             CCASSERT(0, "Not supported.");
         },
     };
@@ -166,43 +166,45 @@ const char* Json::getPrettyString(char indentChar, uint32_t indentCharCount){
 Value Json::getValue() const {
     CC_ASSERT(_document);
     
-    static std::function<Value(const rapidjson::Value& in)> convert[] = {
+    static const std::function<Value(const rapidjson::Value& in) noexcept> convert[] = {
         // kNullType
-        [](const rapidjson::Value& in){
+        [](const rapidjson::Value& in) noexcept {
             return Value();
         },
         // kFalseType
-        [](const rapidjson::Value& in){
+        [](const rapidjson::Value& in) noexcept {
             return Value(false);
         },
         // kTrueType
-        [](const rapidjson::Value& in){
+        [](const rapidjson::Value& in) noexcept {
             return Value(true);
         },
         // kObjectType
-        [](const rapidjson::Value& in){
+        [](const rapidjson::Value& in) noexcept {
             ValueMap result;
             for( auto it = in.MemberBegin(); it != in.MemberEnd(); ++it ){
-                result.emplace( it->name.GetString(), convert[ it->value.GetType() ]( it->value ) );
+                const auto& value = it->value;
+                result.emplace( it->name.GetString(), convert[ value.GetType() ]( value ) );
             }
             return Value( std::move(result) );
         },
         // kArrayType
-        [](const rapidjson::Value& in){
+        [](const rapidjson::Value& in) noexcept {
             ValueVector result;
             const rapidjson::SizeType size = in.Size();
             result.reserve( size );
             for( rapidjson::SizeType lp = 0; lp < size; ++lp ){
-                result.emplace_back( convert[ in.GetType() ]( in[lp] ) );
+                const auto& value = in[lp];
+                result.emplace_back( convert[ value.GetType() ]( value ) );
             }
             return Value( std::move(result) );
         },
         // kStringType
-        [](const rapidjson::Value& in){
+        [](const rapidjson::Value& in) noexcept {
             return Value( in.GetString() );
         },
         // kNumberType
-        [](const rapidjson::Value& in){
+        [](const rapidjson::Value& in) noexcept {
             return in.IsDouble()? Value(in.GetDouble()) : (in.IsUint()? Value(in.GetUint()) : Value(in.GetInt())) ;
         },
     };
