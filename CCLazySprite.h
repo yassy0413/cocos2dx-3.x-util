@@ -20,7 +20,7 @@ NS_CC_EXT_BEGIN
 typedef std::function<void(Sprite* sprite)> ccLazySpriteCallback;
 
 /**
- * テクスチャの読み込みを非同期で行い、完了時に自身へ適用するスプライト
+ * <img>のように扱えるスプライト
  */
 class LazySprite
 : public Sprite
@@ -48,8 +48,8 @@ CC_CONSTRUCTOR_ACCESS:
     bool initAsync(const std::string& filename, const ccLazySpriteCallback& callback);
     
 private:
-    void httpRequestCallback(network::HttpClient* client, network::HttpResponse* response);
-    void textureLoadCallback(Texture2D* texture);
+    static void requestDownload(const std::string& url, LazySprite* target);
+    void addImageAsync(const std::string& filename);
     
     std::string _cacheFileDir;
     std::string _cacheFilePath;
