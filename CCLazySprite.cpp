@@ -79,15 +79,12 @@ void LazySprite::requestDownload(const std::string& url, LazySprite* target){
 
 
 #pragma mark -- LazySprite
-static int countt;
+
 LazySprite::LazySprite()
 : _pCallback(nullptr)
-{
-    ++countt;
-}
+{}
 
 LazySprite::~LazySprite(){
-    CCLOG("**Lazy %d", --countt);
 }
 
 Sprite* LazySprite::createAsync(const std::string& filename, const ccLazySpriteCallback& callback){
