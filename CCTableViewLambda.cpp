@@ -88,10 +88,10 @@ TableViewEasyLambda::TableViewEasyLambda()
             cell->autorelease();
         }
         
-        auto container = cell->getChildByTag(0);
+        auto container = (Node*)cell->getUserData();
         if( !container ){
             container = onTableNodeAtIndex(idx, nullptr);
-            container->setTag( 0 );
+            cell->setUserData( container );
             cell->addChild( container );
         }else{
             onTableNodeAtIndex(idx, container);
