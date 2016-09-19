@@ -10,7 +10,7 @@ NS_CC_EXT_BEGIN
 typedef std::unordered_map<std::string, std::list<LazySprite*>> DownloadingTaskList;
 static DownloadingTaskList* _downloadingTasks = nullptr;
 
-void LazySprite::requestDownload(const std::string& url, LazySprite* target){
+void LazySprite::requestDownload(const std::string& url, const std::string& cacheFilePath, const std::string& cacheFileDir, LazySprite* target){
     
     bool needHttpRequest = true;
     
@@ -32,7 +32,7 @@ void LazySprite::requestDownload(const std::string& url, LazySprite* target){
         network::HttpRequest* req = new network::HttpRequest();
         req->setRequestType( network::HttpRequest::Type::GET );
         req->setUrl( url.c_str() );
-        req->setResponseCallback([](network::HttpClient* client, network::HttpResponse* response){
+        req->setResponseCallback([cacheFilePath, cacheFileDir](network::HttpClient* client, network::HttpResponse* response){
             
             std::list<LazySprite*> targets;
             if( _downloadingTasks ){
@@ -47,9 +47,6 @@ void LazySprite::requestDownload(const std::string& url, LazySprite* target){
                 }
             }
             CC_ASSERT( !targets.empty() );
-            
-            const std::string& cacheFilePath = targets.front()->_cacheFilePath;
-            const std::string& cacheFileDir = targets.front()->_cacheFileDir;
             
             if( response->isSucceed() ){
                 // ダウンロードしたファイルをローカルへ保存する
@@ -81,7 +78,7 @@ void LazySprite::requestDownload(const std::string& url, LazySprite* target){
 #pragma mark -- LazySprite
 
 LazySprite::LazySprite()
-: _pCallback(nullptr)
+: _finishedCallback(nullptr)
 {}
 
 LazySprite::~LazySprite(){
@@ -119,17 +116,42 @@ bool LazySprite::initAsync(const std::string& filename, const ccLazySpriteCallba
 
 bool LazySprite::initWithURL(const std::string& url, const ccLazySpriteCallback& callback, const std::string& cachePath){
     if( Sprite::init() ){
-        _cacheFileDir = FileUtils::getInstance()->getWritablePath() + cachePath;
-        if( *_cacheFileDir.rbegin() != '/' ){
-            _cacheFileDir.push_back('/');
-        }
-        _cacheFilePath = _cacheFileDir + url.substr( url.rfind('/')+1, std::string::npos );
-        _pCallback = callback;
+        _finishedCallback = callback;
         
-        if( !cachePath.empty() && FileUtils::getInstance()->isFileExist( _cacheFilePath ) ){
-            addImageAsync(_cacheFilePath);
+        std::string cacheFileDir = FileUtils::getInstance()->getWritablePath() + cachePath;
+        if( *cacheFileDir.rbegin() != '/' ){
+            cacheFileDir.push_back('/');
+        }
+        
+        std::string filename;
+        const auto separator = url.rfind('/');
+        if( separator != std::string::npos ){
+            const std::string domain = url.substr(0, separator);
+            if( !domain.empty() ){
+                char* buf;
+                cocos2d::base64Encode((const unsigned char*)domain.c_str(), (unsigned int)domain.length(), &buf);
+                cacheFileDir += buf;
+                cacheFileDir.push_back('/');
+                free(buf);
+            }
+            filename = url.substr(separator+1, std::string::npos);
+            if( !filename.empty() ){
+                char* buf;
+                cocos2d::base64Encode((const unsigned char*)filename.c_str(), (unsigned int)filename.length(), &buf);
+                filename = buf;
+                free(buf);
+            }
+        }
+        if( filename.empty() ){
+            filename = cocos2d::StringUtils::toString( std::hash<std::string>()(url) );
+        }
+        const std::string cacheFilePath = cacheFileDir + filename;
+        
+        if( FileUtils::getInstance()->isFileExist( cacheFilePath ) ){
+            addImageAsync(cacheFilePath);
+            CCLOG("cache hit [%s]", url.c_str());
         }else{
-            requestDownload(url, this);
+            requestDownload(url, cacheFilePath, cacheFileDir, this);
         }
         return true;
     }
@@ -144,8 +166,8 @@ void LazySprite::addImageAsync(const std::string& filename){
         if( getReferenceCount() > 1 ){
             setTexture( texture );
             setTextureRect( Rect(0, 0, texture->getContentSize().width, texture->getContentSize().height ) );
-            if( _pCallback != nullptr ){
-                _pCallback( this );
+            if( _finishedCallback != nullptr ){
+                _finishedCallback( this );
             }
         }
         

@@ -48,12 +48,10 @@ CC_CONSTRUCTOR_ACCESS:
     bool initAsync(const std::string& filename, const ccLazySpriteCallback& callback);
     
 private:
-    static void requestDownload(const std::string& url, LazySprite* target);
+    static void requestDownload(const std::string& url, const std::string& cacheFilePath, const std::string& cacheFileDir, LazySprite* target);
     void addImageAsync(const std::string& filename);
     
-    std::string _cacheFileDir;
-    std::string _cacheFilePath;
-    ccLazySpriteCallback _pCallback;
+    ccLazySpriteCallback _finishedCallback;
 };
 
 NS_CC_EXT_END
