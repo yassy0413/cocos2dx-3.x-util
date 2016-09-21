@@ -36,7 +36,10 @@ void ControlEventListener::onControlEvent(Ref* sender, Control::EventType contro
     auto it = _callback.find((Control*)sender);
     CCASSERT(it != _callback.end(), "Unknown control object.");
     if( it != _callback.end() ){
+        // コールバック内でインスタンスが破棄されても良いように保護
+        sender->retain();
         it->second((Control*)sender, controlEvent);
+        sender->release();
     }
 }
 

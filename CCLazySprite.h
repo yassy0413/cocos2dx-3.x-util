@@ -8,12 +8,6 @@
 #include "cocos2d.h"
 #include "cocos-ext.h"
 
-NS_CC_BEGIN
-namespace network {
-    class HttpClient;
-    class HttpResponse;
-}
-NS_CC_END
 
 NS_CC_EXT_BEGIN
 

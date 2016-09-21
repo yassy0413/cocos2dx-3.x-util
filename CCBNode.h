@@ -86,6 +86,11 @@ public:
         return nullptr;
     }
     
+    // short cut
+    void setStringAsLabel(const char* name, const std::string& text);
+    void setTextureAsSprite(const char* name, const std::string& filename);
+    void setTextureAsSprite(const char* name, cocos2d::Texture2D* texture);
+    
 public:
     
     /**
@@ -147,14 +152,6 @@ public:
      */
     typedef std::function<void(const std::string&)> ccbAnimationCompleteCallback;
     ccbAnimationCompleteCallback onAnimationCompleteCallback;
-    
-    
-public:// short cut
-    
-    void setStringAsLabel(const char* name, const std::string& text);
-    
-    void setTextureAsSprite(const char* name, const std::string& filename);
-    void setTextureAsSprite(const char* name, cocos2d::Texture2D* texture);
     
 public:
     
