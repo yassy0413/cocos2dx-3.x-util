@@ -23,6 +23,11 @@ public:
     virtual void onEnter() override {
         Label::onEnter();
         
+        // CCBでの配置は必ずSystemFontになるので、ttfファイル指定時はTTFConfigを設定する
+        if( getSystemFontName().rfind(".ttf") != std::string::npos ){
+            setTTFConfig(TTFConfig(getSystemFontName(), getSystemFontSize()));
+        }
+        
         if( _outlineSize > 0.0f ){
             enableOutline( _outlineColor, _outlineSize );
         }

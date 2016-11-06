@@ -44,12 +44,12 @@ ssize_t TableViewLambda::numberOfCellsInTableView(cocos2d::extension::TableView 
 
 cocos2d::Size TableViewLambda::tableCellSizeForIndex(cocos2d::extension::TableView *table, ssize_t idx){
     CC_ASSERT( onNumberOfCellsInTableView );
-    return onTableCellSizeForIndex(idx);
+    return onTableCellSizeForIndex(static_cast<int>(idx));
 }
 
 cocos2d::extension::TableViewCell* TableViewLambda::tableCellAtIndex(cocos2d::extension::TableView *table, ssize_t idx){
     CC_ASSERT( onNumberOfCellsInTableView );
-    return onTableCellAtIndex(idx, table);
+    return onTableCellAtIndex(static_cast<int>(idx), table);
 }
 
 
