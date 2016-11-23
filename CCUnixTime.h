@@ -12,7 +12,8 @@
 NS_CC_EXT_BEGIN
 
 /**
- * UNIX Time (Seconds)
+ * For credible UNIX Time (Seconds)
+ * 端末の時間操作による影響を避け、安定した時間判定を援助する
  */
 class UnixTime final
 : public Ref
