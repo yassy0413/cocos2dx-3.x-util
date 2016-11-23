@@ -52,7 +52,7 @@ void LazySprite::requestDownload(const std::string& url, const std::string& cach
                 // ダウンロードしたファイルをローカルへ保存する
                 if( FileUtils::getInstance()->createDirectory( cacheFileDir ) ){
                     FILE* file = fopen( cacheFilePath.c_str(), "wb" );
-                    fwrite( &response->getResponseData()->at(0), response->getResponseData()->size(), 1, file );
+                    fwrite( response->getResponseData()->data(), response->getResponseData()->size(), 1, file );
                     fclose( file );
                 }
                 for( auto it : targets ){
@@ -71,6 +71,7 @@ void LazySprite::requestDownload(const std::string& url, const std::string& cach
             }
         });
         network::HttpClient::getInstance()->sendImmediate( req );
+        req->release();
     }
 }
 
