@@ -6,7 +6,7 @@
 #define __CCJSON_H__
 
 #include "cocos2d.h"
-#include "cocos-ext.h"
+#include "ExtensionMacros.h"
 #include <external/json/document.h>
 #include <external/json/stringbuffer.h>
 

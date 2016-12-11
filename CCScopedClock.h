@@ -6,7 +6,7 @@
 #define __CC_SCOPED_CLOCK_H__
 
 #include "cocos2d.h"
-#include "cocos-ext.h"
+#include "ExtensionMacros.h"
 
 #ifndef CC_ENABLE_SCOPED_CLODK
 #define CC_ENABLE_SCOPED_CLODK (COCOS2D_DEBUG > 0)
