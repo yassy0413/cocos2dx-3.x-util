@@ -5,9 +5,10 @@
 #ifndef __CCUNIXTIME_H__
 #define __CCUNIXTIME_H__
 
-#include "ExtensionMacros.h"
+#include <cocos2d.h>
 #include <chrono>
 #include <memory>
+#include "ExtensionMacros.h"
 
 NS_CC_EXT_BEGIN
 
