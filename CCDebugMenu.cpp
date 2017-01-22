@@ -1,5 +1,6 @@
 #include "CCDebugMenu.h"
 
+#if COCOS2D_DEBUG > 0
 NS_CC_EXT_BEGIN
 
 #pragma mark -- Debug Menu
@@ -78,6 +79,20 @@ void DebugMenu::enableLongTap(float seconds){
         Director::getInstance()->getScheduler()->scheduleUpdate(this, 0.0f, false);
     }
     _thresholdLongTap = seconds;
+}
+
+void DebugMenu::enableKeyboard(EventKeyboard::KeyCode keycode){
+    auto listener = cocos2d::EventListenerKeyboard::create();
+    listener->onKeyReleased = [this, keycode](cocos2d::EventKeyboard::KeyCode kc, cocos2d::Event* event){
+        if( keycode == kc ){
+            if( _rootContainer->getParent() ){
+                close();
+            }else{
+                open();
+            }
+        }
+    };
+    cocos2d::Director::getInstance()->getEventDispatcher()->addEventListenerWithFixedPriority(listener, 0xffff);
 }
 
 void DebugMenu::enableAccele(float threshold){
@@ -192,7 +207,7 @@ void DebugMenu::Container::onExit(){
 void DebugMenu::Container::add(Component* target, Component::OnValueChenged onValueChanged){
 	
 	CC_ASSERT(!target->_container);
-	target->_container = this;
+    target->setContainer(this);
     
     if( onValueChanged ){
         target->onValueChenged = onValueChanged;
@@ -203,82 +218,77 @@ void DebugMenu::Container::add(Component* target, Component::OnValueChenged onVa
 
 #pragma mark -- Component
 
-DebugMenu::Component::Component()
-: _container(nullptr)
+DebugMenu::Component::Component(const std::string& key)
+: _key(key)
+, _container(nullptr)
 , onValueChenged([](Component* sender){})
-{}
+{
+    Node::init();
+}
 
 DebugMenu::Component::~Component()
 {}
 
-bool DebugMenu::Component::initWithKey(const std::string& key){
-    if( Node::init() ){
-        _key = key;
-        return true;
-    }
-    return false;
+void DebugMenu::Component::setContainer(cocos2d::extension::DebugMenu::Container* container){
+    _container = container;
 }
 
 #pragma mark -- Component Preset
 
-bool DebugMenu::Component::Preset::Flag::initWithKey(const std::string& key){
-    if( Component::initWithKey(key) ){
-        setContentSize( Size( Director::getInstance()->getWinSize().width * 0.8f, 40 ) );
-        
-        auto background = LayerColor::create( Color4B(0, 50, 0, 150), getContentSize().width, getContentSize().height );
-        addChild( background );
-        
-        auto text = Label::createWithSystemFont(_key, "arial", 18);
-        text->setAnchorPoint( Point( 0.0f, 0.5f ) );
-        text->setPosition( Point(8.0f, getContentSize().height * 0.5f) );
-        addChild(text);
-        
-        auto maskSprite = Sprite::create("images/debug/switch-mask.png");
-        auto control = extension::ControlSwitch::create(maskSprite,
-                                                        Sprite::create("images/debug/switch-on.png"),
-                                                        Sprite::create("images/debug/switch-off.png"),
-                                                        Sprite::create("images/debug/switch-thumb.png"),
-                                                        Label::createWithSystemFont("on", "Arial", 12),
-                                                        Label::createWithSystemFont("off", "Arial", 12) );
-        control->setAnchorPoint( Point( 0.0f, 0.5f ) );
-        control->setPosition( Point(getContentSize().width - maskSprite->getContentSize().width - 8.0f, getContentSize().height * 0.5f) );
-        {
-            control->setOn( UserDefault::getInstance()->getBoolForKey( _key.c_str() ) );
-        }
-        control->addTargetWithActionForControlEvents( this, cccontrol_selector(Flag::onControlEvent), extension::Control::EventType::VALUE_CHANGED );
-        addChild(control);
-        
-        return true;
-    }
-    return false;
+void DebugMenu::Component::Preset::Flag::setContainer(Container* container){
+    Component::setContainer(container);
+    
+    const Size& winSize = Director::getInstance()->getWinSize();
+    
+    setContentSize(Size(winSize.width * 0.8f, winSize.height * 0.08f));
+    
+    auto background = LayerColor::create( Color4B(0, 50, 0, 150), getContentSize().width, getContentSize().height );
+    addChild( background );
+    
+    auto text = Label::createWithSystemFont(_key, "arial", winSize.height * 0.03f);
+    text->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+    text->setPosition( Point(8.0f, getContentSize().height * 0.5f) );
+    addChild(text);
+    
+    const std::string str = UserDefault::getInstance()->getBoolForKey(_key.c_str())?"ON":"OFF";
+    auto control = extension::ControlButton::create(Label::createWithSystemFont(str, "arial", winSize.height * 0.03f),
+                                                    ui::Scale9Sprite::create("images/debug/button.png") );
+    control->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+    control->setPositionX(getContentSize().width * 0.85f);
+    control->setPositionY(getContentSize().height * 0.5f);
+    control->setPreferredSize( Size(getContentSize().width * 0.25f, getContentSize().height * 0.8f) );
+    control->addTargetWithActionForControlEvents(this, cccontrol_selector(Flag::onControlEvent), extension::Control::EventType::TOUCH_UP_INSIDE);
+    addChild(control);
 }
 
 void DebugMenu::Component::Preset::Flag::onControlEvent(Ref* sender, extension::Control::EventType controlEvent){
-	auto p = (extension::ControlSwitch*)sender;
-	UserDefault::getInstance()->setBoolForKey( _key.c_str(), p->isOn() );
+    CC_ASSERT(_container);
+	auto p = (extension::ControlButton*)sender;
+	UserDefault::getInstance()->setBoolForKey(_key.c_str(), !UserDefault::getInstance()->getBoolForKey(_key.c_str()));
+    UserDefault::getInstance()->flush();
+    const std::string str = UserDefault::getInstance()->getBoolForKey(_key.c_str())?"ON":"OFF";
+    p->setTitleForState(str, extension::Control::State::NORMAL);
     onValueChenged(this);
 }
 
-bool DebugMenu::Component::Preset::Button::initWithKey(const std::string& key){
-    if( Component::initWithKey(key) ){
-        setContentSize( Size( Director::getInstance()->getWinSize().width * 0.8f, 32 ) );
-        
-        auto background = LayerColor::create( Color4B(0, 50, 0, 150), getContentSize().width, getContentSize().height );
-        addChild( background );
-        
-        auto control = extension::ControlButton::create(Label::createWithSystemFont(_key.c_str(), "arial", 18),
-                                                        ui::Scale9Sprite::create("images/debug/button.png") );
-        control->setAnchorPoint( Point( 0.5f, 0.5f ) );
-        control->setPosition( Point(getContentSize().width * 0.5f, getContentSize().height * 0.5f) );
-        {
-            control->setPreferredSize( Size(getContentSize().width * 0.8f, getContentSize().height * 0.8f) );
-        }
-        control->addTargetWithActionForControlEvents( this, cccontrol_selector(Button::onControlEvent), extension::Control::EventType::TOUCH_UP_INSIDE );
-        addChild(control);
-        
-        return true;
-    }
-    return false;
+void DebugMenu::Component::Preset::Button::setContainer(Container* container){
+    Component::setContainer(container);
+    
+    const Size& winSize = Director::getInstance()->getWinSize();
+    
+    setContentSize(Size(winSize.width * 0.8f, winSize.height * 0.08f));
+    
+    auto background = LayerColor::create( Color4B(0, 50, 0, 150), getContentSize().width, getContentSize().height );
+    addChild( background );
+    
+    auto control = extension::ControlButton::create(Label::createWithSystemFont(_key.c_str(), "arial", winSize.height * 0.03f),
+                                                    ui::Scale9Sprite::create("images/debug/button.png") );
+    control->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+    control->setPosition(getContentSize() * 0.5f);
+    control->setPreferredSize(getContentSize() * 0.8f);
+    control->addTargetWithActionForControlEvents(this, cccontrol_selector(Button::onControlEvent), extension::Control::EventType::TOUCH_UP_INSIDE);
+    control->setTag(0xff);
+    addChild(control);
 }
 
 void DebugMenu::Component::Preset::Button::onControlEvent(Ref* sender, extension::Control::EventType controlEvent){
@@ -286,49 +296,66 @@ void DebugMenu::Component::Preset::Button::onControlEvent(Ref* sender, extension
     onValueChenged(this);
 }
 
-bool DebugMenu::Component::Preset::Slider::initWithKey(const std::string& key){
-    if( Component::initWithKey(key) ){
-        setContentSize( Size( Director::getInstance()->getWinSize().width * 0.8f, 32 ) );
-        
-        auto background = LayerColor::create( Color4B(0, 50, 0, 150), getContentSize().width, getContentSize().height );
-        addChild( background );
-        
-        _label = Label::createWithSystemFont( "", "arial", 18 );
-        _label->setAnchorPoint( Point( 0.0f, 0.5f ) );
-        _label->setPosition( Point(8.0f, getContentSize().height * 0.5f) );
-        addChild(_label);
-        updateLabel();
-        
-        auto control = extension::ControlSlider::create("images/debug/sliderTrack.png",
-                                                        "images/debug/sliderProgress.png",
-                                                        "images/debug/sliderThumb.png");
-        control->setAnchorPoint( Point( 0.0f, 0.5f ) );
-        control->setPosition( Point(128, getContentSize().height * 0.5f) );
-        {
-            control->setMinimumValue( _minValue );
-            control->setMaximumValue( _maxValue );
-            control->setValue( UserDefault::getInstance()->getFloatForKey( _key.c_str() ) );
-            control->setContentSize( Size(getContentSize().width * 0.8f, getContentSize().height * 0.8f) );//TODO!
-        }
-        control->addTargetWithActionForControlEvents( this, cccontrol_selector(Slider::onControlEvent), extension::Control::EventType::VALUE_CHANGED );
-        addChild(control);
-        
-        return true;
+void DebugMenu::Component::Preset::Button::onEnter(){
+    Component::onEnter();
+    if( auto control = reinterpret_cast<extension::ControlButton*>(getChildByTag(0xff)) ){
+        control->setHighlighted(false);
     }
-    return false;
+}
+
+void DebugMenu::Component::Preset::Slider::setContainer(Container* container){
+    Component::setContainer(container);
+    
+    const Size& winSize = Director::getInstance()->getWinSize();
+    
+    setContentSize(Size(winSize.width * 0.8f, winSize.height * 0.08f));
+    
+    auto background = LayerColor::create(Color4B(0, 50, 0, 150), getContentSize().width, getContentSize().height);
+    addChild( background );
+    
+    _label = Label::createWithSystemFont("", "arial", winSize.height * 0.03f);
+    _label->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+    _label->setPosition(8.0f, getContentSize().height * 0.5f);
+    addChild(_label);
+    updateLabel();
+    
+    auto control = extension::ControlSlider::create("images/debug/sliderTrack.png",
+                                                    "images/debug/sliderProgress.png",
+                                                    "images/debug/sliderThumb.png");
+    control->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+    control->setPosition(_label->getPositionX() + _label->getContentSize().width + getContentSize().width * 0.1f, getContentSize().height * 0.5f);
+    {
+        control->setMinimumValue(_minValue);
+        control->setMaximumValue(_maxValue);
+        control->setValue(UserDefault::getInstance()->getFloatForKey( _key.c_str() ));
+        control->setScaleX((getContentSize().width - _label->getContentSize().width) / control->getContentSize().width * 0.8f);
+        control->setScaleY(getContentSize().height * 0.8f / control->getContentSize().height);
+    }
+    control->addTargetWithActionForControlEvents(this, cccontrol_selector(Slider::onControlEvent), extension::Control::EventType::VALUE_CHANGED);
+    addChild(control);
 }
 
 void DebugMenu::Component::Preset::Slider::onControlEvent(Ref* sender, extension::Control::EventType controlEvent){
 	auto p = (extension::ControlSlider*)sender;
 	UserDefault::getInstance()->setFloatForKey( _key.c_str(), p->getValue() );
+    UserDefault::getInstance()->flush();
 	updateLabel();
     onValueChenged(this);
 }
 
 void DebugMenu::Component::Preset::Slider::updateLabel(){
 	char buf[256];
-	sprintf( buf, "%s %.1f", _key.c_str(), UserDefault::getInstance()->getFloatForKey( _key.c_str() ) );
+    const float value = UserDefault::getInstance()->getFloatForKey( _key.c_str() );
+    sprintf( buf, "%s %.1f", _key.c_str(), value );
 	_label->setString(buf);
 }
 
+void DebugMenu::Component::Preset::SliderI::updateLabel(){
+    char buf[256];
+    const float value = UserDefault::getInstance()->getFloatForKey( _key.c_str() );
+    sprintf( buf, "%s %d", _key.c_str(), static_cast<int32_t>(value) );
+    _label->setString(buf);
+}
+
 NS_CC_EXT_END
+#endif

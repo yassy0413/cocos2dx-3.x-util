@@ -19,7 +19,7 @@ CCBNode* CCBNode::createFromFile(const char* ccbiFileName){
 
 CCBNode::CCBNode()
 : onNodeLoaderCompleteCallback(nullptr)
-, onAnimationCompleteCallback(nullptr)
+, onAnimationCompleted(nullptr)
 , _animationManager(nullptr)
 , _lastCompletedAnimationSequenceNamed("")
 , _runningAnimationName("")
@@ -51,6 +51,10 @@ void CCBNode::reserveAnimation(const char* pName){
     }else{
         _reservedAnimationNames.push(pName);
     }
+}
+
+void CCBNode::autoReleaseWithAnimation(){
+    _autoReleaseWithAnimation = true;
 }
 
 void CCBNode::setStringAsLabel(const char* name, const std::string& text){
@@ -95,8 +99,8 @@ void CCBNode::completedAnimationSequenceNamed(const char *name){
     
     _lastCompletedAnimationSequenceNamed = name;
     
-    if( onAnimationCompleteCallback ){
-        onAnimationCompleteCallback( name );
+    if( onAnimationCompleted ){
+        onAnimationCompleted( name );
     }
     
     if( _autoReleaseWithAnimation ){

@@ -8,6 +8,7 @@
 #include "cocos2d.h"
 #include "cocos-ext.h"
 
+#if COCOS2D_DEBUG > 0
 NS_CC_EXT_BEGIN
 
 /**
@@ -36,6 +37,11 @@ public:
      * @param seconds 必要なホールド秒数
      */
     void enableLongTap(float seconds = 1.0f);
+    
+    /**
+     * キー入力でメニューを開くようにする
+     */
+    void enableKeyboard(EventKeyboard::KeyCode keycode);
     
     /**
      * 加速度センサーでメニューを開くようにする
@@ -80,10 +86,9 @@ public:
 		friend class Container;
 		class Preset;
         
-		Component();
+		Component(const std::string& key);
 		virtual ~Component();
 		
-		virtual bool initWithKey(const std::string& key);
         const std::string& getKey() const { return _key; }
         
         typedef std::function<void(Component* sender)> OnValueChenged;
@@ -92,6 +97,9 @@ public:
 	protected:
 		Container* _container;
 		std::string _key;
+        
+    private:
+        virtual void setContainer(Container* container);
 	};
 	
 	/**
@@ -133,9 +141,9 @@ public:
 	: public Component
 	{
 	public:
-		Flag(const std::string& key){ initWithKey(key); }
-		virtual bool initWithKey(const std::string& key) override;
+        Flag(const std::string& key) : Component(key){}
 	private:
+        virtual void setContainer(Container* container) override;
 		virtual void onControlEvent(cocos2d::Ref* sender, cocos2d::extension::Control::EventType controlEvent);
 	};
 	
@@ -146,9 +154,10 @@ public:
 	: public Component
 	{
 	public:
-		Button(const std::string& key){ initWithKey(key); }
-		virtual bool initWithKey(const std::string& key) override;
+		Button(const std::string& key) : Component(key){}
+        virtual void onEnter() override;
 	private:
+        virtual void setContainer(Container* container) override;
 		virtual void onControlEvent(cocos2d::Ref* sender, cocos2d::extension::Control::EventType controlEvent);
 	};
 	
@@ -160,19 +169,32 @@ public:
 	{
 	public:
 		Slider(const std::string& key, float min, float max)
-		: _minValue(min)
+        : Component(key)
+		, _minValue(min)
 		, _maxValue(max)
-		{ initWithKey(key); }
-		virtual bool initWithKey(const std::string& key) override;
+        {}
 	private:
+        virtual void setContainer(Container* container) override;
 		virtual void onControlEvent(cocos2d::Ref* sender, cocos2d::extension::Control::EventType controlEvent);
-		void updateLabel();
-		
+		virtual void updateLabel();
+    protected:
 		Label* _label;
 		float _minValue;
 		float _maxValue;
 	};
+    
+    class SliderI
+    : public Slider
+    {
+    public:
+        SliderI(const std::string& key, float min, float max)
+        : Slider(key, min, max)
+        {}
+    private:
+        virtual void updateLabel() override;
+    };
 };
 
 NS_CC_EXT_END
+#endif
 #endif

@@ -151,7 +151,7 @@ public:
      * アニメーション終了時のコールバック
      */
     typedef std::function<void(const std::string&)> ccbAnimationCompleteCallback;
-    ccbAnimationCompleteCallback onAnimationCompleteCallback;
+    ccbAnimationCompleteCallback onAnimationCompleted;
     
 public:
     
