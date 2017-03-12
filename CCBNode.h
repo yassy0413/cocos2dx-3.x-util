@@ -46,6 +46,11 @@ public:
     static CCBNode* createFromFile(const char* ccbiFileName);
     
     /**
+     * CCBReaderから作成されたインスタンスを作成する
+     */
+    static CCBNode* createFromData(std::shared_ptr<Data> data);
+    
+    /**
      * CCBのデフォルトアニメーション名称
      */
     static const char* DEFAULT_ANIMATION_NAME;

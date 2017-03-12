@@ -47,13 +47,17 @@ public:
     /**
      * 現在の西暦を取得する
      */
-    const tm& getLocalTime() const;
+    std::unique_ptr<tm> getLocalTime() const;
+    
+    /**
+     * 指定秒数後の西暦を取得する
+     */
+    std::unique_ptr<tm> getLocalTimeAfter(int64_t seconds) const;
     
 private:
     UnixTime();
     ~UnixTime();
     
-    mutable std::unique_ptr<tm> _tm;
     std::chrono::steady_clock::time_point _capturedTimePoint;
     int64_t _capturedUnixTime;
 };
@@ -63,7 +67,7 @@ private:
  * サーバから時間を取得して初期化するサンプル。
  * @warning For only test.
  */
-void SetupUnixTimeSample(std::function<void(UnixTime* sender)> callback = nullptr);
+void setupUnixTimeSample(std::function<void(UnixTime* sender)> callback = nullptr);
 #endif
 
 NS_CC_EXT_END

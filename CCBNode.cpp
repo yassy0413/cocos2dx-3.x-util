@@ -11,8 +11,26 @@ const char* CCBNode::DEFAULT_ANIMATION_NAME = "Default Timeline";
 CCBNode* CCBNode::createFromFile(const char* ccbiFileName){
     CCASSERT( FileUtils::getInstance()->isFileExist(ccbiFileName), ccbiFileName );
     auto reader = new (std::nothrow) cocosbuilder::CCBReader( cocosbuilder::NodeLoaderLibrary::getInstance() );
-    auto pRet = dynamic_cast<cocos2d::extension::CCBNode*>( reader->readNodeGraphFromFile(ccbiFileName) );
-    CCASSERT( pRet, cocos2d::StringUtils::format("[%s] is not CCBNode", ccbiFileName).c_str() );
+    auto nodeGraph = reader->readNodeGraphFromFile(ccbiFileName);
+#if COCOS2D_DEBUG > 0
+    auto pRet = dynamic_cast<cocos2d::extension::CCBNode*>(nodeGraph);
+    CCASSERT(pRet, cocos2d::StringUtils::format("[%s] is not CCBNode", ccbiFileName).c_str());
+#else
+    auto pRet = reinterpret_cast<cocos2d::extension::CCBNode*>(nodeGraph);
+#endif
+    reader->release();
+    return pRet;
+}
+
+CCBNode* CCBNode::createFromData(std::shared_ptr<cocos2d::Data> data){
+    auto reader = new (std::nothrow) cocosbuilder::CCBReader( cocosbuilder::NodeLoaderLibrary::getInstance() );
+    auto nodeGraph = reader->readNodeGraphFromData(data, nullptr, Director::getInstance()->getWinSize());
+#if COCOS2D_DEBUG > 0
+    auto pRet = dynamic_cast<cocos2d::extension::CCBNode*>(nodeGraph);
+    CCASSERT(pRet, "Illegal CCBNode data");
+#else
+    auto pRet = reinterpret_cast<cocos2d::extension::CCBNode*>(nodeGraph);
+#endif
     reader->release();
     return pRet;
 }
