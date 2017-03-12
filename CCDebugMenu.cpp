@@ -10,8 +10,7 @@ static DebugMenu *s_SharedDebugMenu = nullptr;
 
 DebugMenu* DebugMenu::getInstance()
 {
-    if (!s_SharedDebugMenu)
-    {
+    if (!s_SharedDebugMenu){
         s_SharedDebugMenu = new (std::nothrow) DebugMenu();
         CCASSERT(s_SharedDebugMenu, "FATAL: Not enough memory");
         s_SharedDebugMenu->init();
@@ -114,17 +113,17 @@ void DebugMenu::enableAccele(float threshold){
 }
 
 void DebugMenu::update(float delta){
-	// ロングタップ検出
-	if( _touching ){
+    // ロングタップ検出
+    if( _touching ){
         const auto elapsed = std::chrono::system_clock::now() - _touchBeganTime;
         const float duration = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() / 1000.0f;
-		if( duration >= _thresholdLongTap ){
-			if( _touchCurrentPoint.distance(_touchBeganPoint) < 12.0f ){
-				open();
-			}
+        if( duration >= _thresholdLongTap ){
+            if( _touchCurrentPoint.distance(_touchBeganPoint) < 12.0f ){
+                open();
+            }
             _touching = false;
-		}
-	}
+        }
+    }
 }
 
 void DebugMenu::open(){
@@ -175,8 +174,8 @@ DebugMenu::Container::~Container(){
 }
 
 void DebugMenu::Container::onEnter(){
-	Node::onEnter();
-	
+    Node::onEnter();
+    
     //
     _offsetY = 0.0f;
     for( auto component : _components ){
@@ -201,12 +200,12 @@ void DebugMenu::Container::onEnter(){
 }
 
 void DebugMenu::Container::onExit(){
-	Node::onExit();
+    Node::onExit();
 }
 
 void DebugMenu::Container::add(Component* target, Component::OnValueChenged onValueChanged){
-	
-	CC_ASSERT(!target->_container);
+    
+    CC_ASSERT(!target->_container);
     target->setContainer(this);
     
     if( onValueChanged ){
@@ -263,8 +262,8 @@ void DebugMenu::Component::Preset::Flag::setContainer(Container* container){
 
 void DebugMenu::Component::Preset::Flag::onControlEvent(Ref* sender, extension::Control::EventType controlEvent){
     CC_ASSERT(_container);
-	auto p = (extension::ControlButton*)sender;
-	UserDefault::getInstance()->setBoolForKey(_key.c_str(), !UserDefault::getInstance()->getBoolForKey(_key.c_str()));
+    auto p = (extension::ControlButton*)sender;
+    UserDefault::getInstance()->setBoolForKey(_key.c_str(), !UserDefault::getInstance()->getBoolForKey(_key.c_str()));
     UserDefault::getInstance()->flush();
     const std::string str = UserDefault::getInstance()->getBoolForKey(_key.c_str())?"ON":"OFF";
     p->setTitleForState(str, extension::Control::State::NORMAL);
@@ -292,7 +291,7 @@ void DebugMenu::Component::Preset::Button::setContainer(Container* container){
 }
 
 void DebugMenu::Component::Preset::Button::onControlEvent(Ref* sender, extension::Control::EventType controlEvent){
-	CC_ASSERT(_container);
+    CC_ASSERT(_container);
     onValueChenged(this);
 }
 
@@ -336,18 +335,18 @@ void DebugMenu::Component::Preset::Slider::setContainer(Container* container){
 }
 
 void DebugMenu::Component::Preset::Slider::onControlEvent(Ref* sender, extension::Control::EventType controlEvent){
-	auto p = (extension::ControlSlider*)sender;
-	UserDefault::getInstance()->setFloatForKey( _key.c_str(), p->getValue() );
+    auto p = (extension::ControlSlider*)sender;
+    UserDefault::getInstance()->setFloatForKey( _key.c_str(), p->getValue() );
     UserDefault::getInstance()->flush();
-	updateLabel();
+    updateLabel();
     onValueChenged(this);
 }
 
 void DebugMenu::Component::Preset::Slider::updateLabel(){
-	char buf[256];
+    char buf[256];
     const float value = UserDefault::getInstance()->getFloatForKey( _key.c_str() );
     sprintf( buf, "%s %.1f", _key.c_str(), value );
-	_label->setString(buf);
+    _label->setString(buf);
 }
 
 void DebugMenu::Component::Preset::SliderI::updateLabel(){
