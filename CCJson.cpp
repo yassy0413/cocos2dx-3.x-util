@@ -101,7 +101,8 @@ bool Json::initFromValue(const Value& value){
         },
         // STRING
         [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
-            out.SetString( in.asString().c_str(), static_cast<rapidjson::SizeType>(in.asString().length()) );
+            const std::string v( in.asString() );
+            out.SetString( v.c_str(), static_cast<rapidjson::SizeType>(v.length()), document.GetAllocator() );
         },
         // VECTOR
         [](rapidjson::Document& document, const Value& in, rapidjson::Value& out) noexcept {
