@@ -110,7 +110,7 @@ bool Json::initFromValue(const Value& value){
             for( const auto& vv : in.asValueVector() ){
                 rapidjson::Value v;
                 convert[ static_cast<int>(vv.getType()) ]( document, vv, v );
-                out.PushBack( v, document.GetAllocator() );
+                out.PushBack( std::move(v), document.GetAllocator() );
             }
         },
         // MAP
@@ -119,7 +119,7 @@ bool Json::initFromValue(const Value& value){
             for( const auto& vv : in.asValueMap() ){
                 rapidjson::Value v;
                 convert[ static_cast<int>(vv.second.getType()) ]( document, vv.second, v );
-                out.AddMember( rapidjson::StringRef(vv.first.c_str()), v, document.GetAllocator() );
+                out.AddMember( rapidjson::StringRef(vv.first.c_str()), std::move(v), document.GetAllocator() );
             }
         },
         // INT_KEY_MAP
