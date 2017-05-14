@@ -58,8 +58,7 @@ void LazySprite::requestDownload(const std::string& url, const std::string& cach
                 for( auto it : targets ){
                     // 自分以外からの参照があれば処理
                     if( it->getReferenceCount() > 1 ){
-                        // TODO: make thread. バイナリを直接渡せるようにする
-                        it->addImageAsync(cacheFilePath);
+                        it->addImageAsync(cacheFilePath, std::move(*response->getResponseData()));
                     }
                 }
             }else{
@@ -92,7 +91,7 @@ Sprite* LazySprite::createAsync(const std::string& filename, const ccLazySpriteC
         sprite->autorelease();
         return sprite;
     }
-    CC_SAFE_DELETE(sprite);
+    delete sprite;
     return nullptr;
 }
 
@@ -103,7 +102,7 @@ Sprite* LazySprite::createWithURL(const std::string& url, const ccLazySpriteCall
         sprite->autorelease();
         return sprite;
     }
-    CC_SAFE_DELETE(sprite);
+    delete sprite;
     return nullptr;
 }
 
@@ -161,19 +160,44 @@ bool LazySprite::initWithURL(const std::string& url, const ccLazySpriteCallback&
 
 void LazySprite::addImageAsync(const std::string& filename){
     retain();
-    Director::getInstance()->getTextureCache()->addImageAsync( filename, [this](Texture2D* texture){
+    Director::getInstance()->getTextureCache()->addImageAsync(filename, [this](Texture2D* texture){
         
         // 自分以外からの参照があれば処理
         if( getReferenceCount() > 1 ){
-            setTexture( texture );
-            setTextureRect( Rect(0, 0, texture->getContentSize().width, texture->getContentSize().height ) );
+            setTexture(texture);
+            setTextureRect(Rect(0, 0, texture->getContentSize().width, texture->getContentSize().height ));
             if( _finishedCallback != nullptr ){
-                _finishedCallback( this );
+                _finishedCallback(this);
             }
         }
         
         release();
     });
+}
+
+void LazySprite::addImageAsync(std::string filename, std::vector<char>&& data){
+    retain();
+    auto it = _work.emplace(_work.end(), std::move(filename), std::move(data), nullptr);
+    //
+    auto task = [this, it](){
+        const std::vector<char>& data = std::get<1>(*it);
+        Image* image = new (std::nothrow) Image();
+        image->initWithImageData(reinterpret_cast<const unsigned char*>(data.data()), data.size());
+        std::get<2>(*it) = image;
+    };
+    auto finished = [this, it](void*){
+        // 自分以外からの参照があれば処理
+        if( getReferenceCount() > 1 ){
+            Texture2D* texture = Director::getInstance()->getTextureCache()->addImage(std::get<2>(*it), std::get<0>(*it));
+            setTexture(texture);
+            setTextureRect(Rect(0, 0, texture->getContentSize().width, texture->getContentSize().height ));
+            if( _finishedCallback != nullptr ){
+                _finishedCallback( this );
+            }
+        }
+        _work.erase(it);
+    };
+    AsyncTaskPool::getInstance()->enqueue(AsyncTaskPool::TaskType::TASK_OTHER, finished, nullptr, task);
 }
 
 NS_CC_EXT_END
