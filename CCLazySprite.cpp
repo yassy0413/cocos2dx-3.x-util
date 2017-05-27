@@ -58,7 +58,7 @@ void LazySprite::requestDownload(const std::string& url, const std::string& cach
                 for( auto it : targets ){
                     // 自分以外からの参照があれば処理
                     if( it->getReferenceCount() > 1 ){
-                        it->addImageAsync(cacheFilePath, std::move(*response->getResponseData()));
+                        it->addImageAsync(cacheFilePath, *response->getResponseData());
                     }
                 }
             }else{
@@ -147,7 +147,7 @@ bool LazySprite::initWithURL(const std::string& url, const ccLazySpriteCallback&
         }
         const std::string cacheFilePath = cacheFileDir + filename;
         
-        if( FileUtils::getInstance()->isFileExist( cacheFilePath ) ){
+        if( FileUtils::getInstance()->isFileExist(cacheFilePath) ){
             addImageAsync(cacheFilePath);
             CCLOG("cache hit [%s]", url.c_str());
         }else{
@@ -175,9 +175,9 @@ void LazySprite::addImageAsync(const std::string& filename){
     });
 }
 
-void LazySprite::addImageAsync(std::string filename, std::vector<char>&& data){
+void LazySprite::addImageAsync(std::string filename, const std::vector<char>& data){
     retain();
-    auto it = _work.emplace(_work.end(), std::move(filename), std::move(data), nullptr);
+    auto it = _work.emplace(_work.end(), std::move(filename), data, nullptr);
     //
     auto task = [this, it](){
         const std::vector<char>& data = std::get<1>(*it);

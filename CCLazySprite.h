@@ -44,7 +44,7 @@ CC_CONSTRUCTOR_ACCESS:
 private:
     static void requestDownload(const std::string& url, const std::string& cacheFilePath, const std::string& cacheFileDir, LazySprite* target);
     void addImageAsync(const std::string& filename);
-    void addImageAsync(std::string filename, std::vector<char>&& data);
+    void addImageAsync(std::string filename, const std::vector<char>& data);
     
     ccLazySpriteCallback _finishedCallback;
     std::list<std::tuple<std::string, std::vector<char>, Image*>> _work;
