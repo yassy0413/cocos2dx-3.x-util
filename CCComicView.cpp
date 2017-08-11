@@ -132,38 +132,6 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
     }
     
     //
-    _pageDatas.resize(_attribute->urlList.size());
-    for( int lp = 0; lp < _pageDatas.size(); ++lp ){
-        auto& pageData = _pageDatas[lp];
-        pageData.index = lp;
-        pageData.url = _attribute->urlList[lp];
-        pageData.storagePath = makePath(pageData.url);
-        pageData.loading = false;
-        pageData.initializing = false;
-        pageData.image = nullptr;
-        pageData.texture = nullptr;
-    }
-    
-    //
-    _pageViews.resize(_attribute->cacheRange * 2 + 1);
-    for( int lp = 0; lp < _pageViews.size(); ++lp ){
-        auto& pageView = _pageViews[lp];
-        pageView.offsetIndex = lp - (int)_pageViews.size()/2;
-        pageView.index = lp;
-        pageView.sprite = new (std::nothrow) Sprite();
-        pageView.sprite->init();
-        pageView.sprite->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
-        pageView.loadingNode = new (std::nothrow) Node();
-        pageView.loadingNode->init();
-        pageView.loadingNode->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
-        pageView.loadingNode->setVisible(false);
-        addChild(pageView.sprite);
-        addChild(pageView.loadingNode);
-    }
-    
-    setPage(0);
-    
-    //
     _pageFileThread = std::thread([this](){
         while( auto p = _pageFileQueue.pop_wait() ){
             if( p->data.empty() ){
@@ -202,6 +170,36 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
             _pageImageReadyQueue.push(p);
         }
     });
+    
+    //
+    _pageDatas.resize(_attribute->urlList.size());
+    for( int lp = 0; lp < _pageDatas.size(); ++lp ){
+        auto& pageData = _pageDatas[lp];
+        pageData.index = lp;
+        pageData.url = _attribute->urlList[lp];
+        pageData.storagePath = makePath(pageData.url);
+        pageData.loading = false;
+        pageData.initializing = false;
+        pageData.image = nullptr;
+        pageData.texture = nullptr;
+    }
+    
+    //
+    _pageViews.resize(_attribute->cacheRange * 2 + 1);
+    for( int lp = 0; lp < _pageViews.size(); ++lp ){
+        auto& pageView = _pageViews[lp];
+        pageView.offsetIndex = lp - (int)_pageViews.size()/2;
+        pageView.index = lp;
+        pageView.sprite = new (std::nothrow) Sprite();
+        pageView.sprite->init();
+        pageView.sprite->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+        pageView.loadingNode = new (std::nothrow) Node();
+        pageView.loadingNode->init();
+        pageView.loadingNode->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+        pageView.loadingNode->setVisible(false);
+        addChild(pageView.sprite);
+        addChild(pageView.loadingNode);
+    }
     
     //
     auto touch = EventListenerTouchOneByOne::create();
@@ -258,6 +256,10 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
     };
     getEventDispatcher()->addEventListenerWithSceneGraphPriority(touch, this);
     _touchEvent = touch;
+    
+    //
+    update(0);
+    setPage(0);
     
     return true;
 }
