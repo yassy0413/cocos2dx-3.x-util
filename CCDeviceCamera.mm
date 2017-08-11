@@ -19,7 +19,7 @@
     // 入力デバイスの作成
     if( pos == cocos2d::extension::DeviceCameraSprite::CaptureDevicePosition::Default ){
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
-        pos = cocos2d::DeviceCameraSprite::CaptureDevicePosition::Back;
+        pos = cocos2d::extension::DeviceCameraSprite::CaptureDevicePosition::Back;
 #else
         pos = cocos2d::extension::DeviceCameraSprite::CaptureDevicePosition::Front;
 #endif
