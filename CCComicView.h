@@ -5,11 +5,12 @@
 #ifndef __CCCOMICVIEW_H__
 #define __CCCOMICVIEW_H__
 
-#include "cocos2d.h"
+#include <cocos2d.h>
+#include "ExtensionMacros.h"
 #include <array>
 
 
-NS_CC_BEGIN
+NS_CC_EXT_BEGIN
 
 /**
  * 漫画的閲覧ビュー
@@ -183,8 +184,8 @@ private:
  * 漫画的閲覧ビューの実装サンプル
  * @warning For only test.
  */
-ComicView* createComicViewSample(const std::vector<std::string>& urlList, bool vertical = false);
+ComicView* createComicViewSample(const std::vector<std::string>& urlList, bool vertical, bool adjust);
 #endif
 
-NS_CC_END
+NS_CC_EXT_END
 #endif

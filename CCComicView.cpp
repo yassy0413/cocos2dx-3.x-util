@@ -7,7 +7,7 @@
 #include "network/HttpClient.h"
 #include <unistd.h>
 
-NS_CC_BEGIN
+NS_CC_EXT_BEGIN
 
 #pragma mark -- Attribute
 
@@ -536,18 +536,21 @@ void ComicView::setPage(int32_t page){
 }
 
 #if COCOS2D_DEBUG > 0
-ComicView* createComicViewSample(const std::vector<std::string>& urlList, bool vertical){
+ComicView* createComicViewSample(const std::vector<std::string>& urlList, bool vertical, bool adjust){
     auto labelPage = cocos2d::Label::createWithSystemFont("", "Helvetica", 32);
     labelPage->setPosition(cocos2d::Director::getInstance()->getWinSize().width * 0.5f, 32.0f);
     labelPage->setColor(cocos2d::Color3B::GREEN);
     
-    std::unique_ptr<cocos2d::ComicView::Attribute> attr( new (std::nothrow) cocos2d::ComicView::Attribute() );
+    std::unique_ptr<cocos2d::extension::ComicView::Attribute> attr( new (std::nothrow) cocos2d::extension::ComicView::Attribute() );
     attr->urlList = urlList;
     attr->cacheDir = "comic/";
     if( vertical ){
         attr->direction = ComicView::Direction::Vertical;
     }
-    attr->onUpdatePageIndex = [labelPage](cocos2d::ComicView* sender){
+    if( !adjust ){
+        attr->pageAdjustment = false;
+    }
+    attr->onUpdatePageIndex = [labelPage](cocos2d::extension::ComicView* sender){
         labelPage->setString(cocos2d::StringUtils::format("%d/%d", sender->getCurrentPage()+1, sender->getNumPages()));
     };
     attr->onCreateLoadingNode = [](){
@@ -567,10 +570,10 @@ ComicView* createComicViewSample(const std::vector<std::string>& urlList, bool v
         return label;
     };
     
-    auto view = cocos2d::ComicView::createWithAttribute(std::move(attr));
+    auto view = ComicView::createWithAttribute(std::move(attr));
     view->addChild(labelPage);
     return view;
 }
 #endif
 
-NS_CC_END
+NS_CC_EXT_END
