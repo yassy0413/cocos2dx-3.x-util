@@ -13,13 +13,15 @@
 
 @implementation CCDeviceCamera
 
--(id)init:(cocos2d::DeviceCameraSprite::CaptureDevicePosition)pos quality:(cocos2d::DeviceCameraSprite::Quality)quality {
+-(id)init:(cocos2d::extension::DeviceCameraSprite::CaptureDevicePosition)pos
+  quality:(cocos2d::extension::DeviceCameraSprite::Quality)quality
+{
     // 入力デバイスの作成
-    if( pos == cocos2d::DeviceCameraSprite::CaptureDevicePosition::Default ){
+    if( pos == cocos2d::extension::DeviceCameraSprite::CaptureDevicePosition::Default ){
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
         pos = cocos2d::DeviceCameraSprite::CaptureDevicePosition::Back;
 #else
-        pos = cocos2d::DeviceCameraSprite::CaptureDevicePosition::Front;
+        pos = cocos2d::extension::DeviceCameraSprite::CaptureDevicePosition::Front;
 #endif
     }
     const AVCaptureDevicePosition avCaptureDevicePosition[] = {
@@ -125,7 +127,7 @@
 
 @end
 
-NS_CC_BEGIN
+NS_CC_EXT_BEGIN
 
 DeviceCameraSprite* DeviceCameraSprite::create(CaptureDevicePosition pos, Quality quality){
     auto pRet = new (std::nothrow) DeviceCameraSprite();
@@ -189,4 +191,4 @@ void DeviceCameraSprite::update(float delta){
     }
 }
 
-NS_CC_END
+NS_CC_EXT_END

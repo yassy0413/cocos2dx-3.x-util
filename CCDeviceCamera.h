@@ -5,9 +5,10 @@
 #ifndef __CCCAMERAVIEW_H__
 #define __CCCAMERAVIEW_H__
 
-#include "cocos2d.h"
+#include <cocos2d.h>
+#include "ExtensionMacros.h"
 
-NS_CC_BEGIN
+NS_CC_EXT_BEGIN
 
 /**
  * デバイスカメラの映像をスプライトとして扱う
@@ -54,6 +55,6 @@ private:
     experimental::FrameBuffer* _frameBuffer;
 };
 
-NS_CC_END
+NS_CC_EXT_END
 
 #endif

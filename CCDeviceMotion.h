@@ -5,9 +5,10 @@
 #ifndef __CCDEVICEMOTION_H__
 #define __CCDEVICEMOTION_H__
 
-#include "cocos2d.h"
+#include <cocos2d.h>
+#include "ExtensionMacros.h"
 
-NS_CC_BEGIN
+NS_CC_EXT_BEGIN
 
 /**
  * デバイスセンサーによる回転値の取得
@@ -35,6 +36,6 @@ private:
     Quaternion _quat;
 };
 
-NS_CC_END
+NS_CC_EXT_END
 
 #endif

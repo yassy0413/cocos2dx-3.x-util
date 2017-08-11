@@ -7,7 +7,7 @@
 // TODO: Implement Android
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
 
-NS_CC_BEGIN
+NS_CC_EXT_BEGIN
 
 DeviceMotion::DeviceMotion(){
 }
@@ -22,5 +22,5 @@ bool DeviceMotion::init(){
 void DeviceMotion::update(float delta){
 }
 
-NS_CC_END
+NS_CC_EXT_END
 #endif

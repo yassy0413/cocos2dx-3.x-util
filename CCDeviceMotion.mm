@@ -49,7 +49,7 @@
 @end
 #endif
 
-NS_CC_BEGIN
+NS_CC_EXT_BEGIN
 
 DeviceMotion::DeviceMotion(){
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
@@ -81,4 +81,4 @@ void DeviceMotion::update(float delta){
 #endif
 }
 
-NS_CC_END
+NS_CC_EXT_END

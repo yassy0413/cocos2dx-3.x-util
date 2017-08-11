@@ -7,7 +7,7 @@
 // TODO: Implement Android
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
 
-NS_CC_BEGIN
+NS_CC_EXT_BEGIN
 
 DeviceCameraSprite* DeviceCameraSprite::create(CaptureDevicePosition pos, Quality quality){
     auto pRet = new (std::nothrow) DeviceCameraSprite();
@@ -52,5 +52,5 @@ void DeviceCameraSprite::onExit(){
 void DeviceCameraSprite::update(float delta){
 }
 
-NS_CC_END
+NS_CC_EXT_END
 #endif
