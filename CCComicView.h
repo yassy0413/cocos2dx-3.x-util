@@ -38,6 +38,11 @@ public:
         std::vector<std::string> urlList;
         /// ページの進行方向
         Direction direction;
+        /// ダウンロードしたファイルの置き場所
+        std::string cacheDir;
+        /// 前後ページのキャッシュ数
+        int32_t cacheRange;
+        
         /// ページの自動位置補正
         bool pageAdjustment;
         /// ページ自動位置補正の速度倍率
@@ -48,10 +53,8 @@ public:
         float pageAdjustmentLowSpeed;
         /// 慣性速度の減衰率
         float inertiaDumpingForce;
-        /// ダウンロードしたファイルの置き場所
-        std::string cacheDir;
-        /// 前後ページのキャッシュ数
-        int32_t cacheRange;
+        /// 両端のタッチ判定サイズ
+        float edgeSize;
         
         /// 閲覧ページの変更通知
         std::function<void(ComicView* sender)> onUpdatePageIndex;

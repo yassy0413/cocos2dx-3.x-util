@@ -18,6 +18,7 @@ ComicView::Attribute::Attribute()
 , pageAdjustmentThreshold(0.05f)
 , pageAdjustmentLowSpeed(4.0f)
 , inertiaDumpingForce(100.0f)
+, edgeSize(128)
 , cacheRange(3)
 {}
 
@@ -237,21 +238,40 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
         _inertiaSpeed = diff;
     };
     touch->onTouchEnded = [this](Touch* touch, Event*){
-        if( _attribute->pageAdjustment ){
-            if( fabsf(_touchMoved) > _pageSize * _attribute->pageAdjustmentThreshold ){
-                if( _touchMoved > 0 && (_pageIndex < _pageDatas.size()-1) ){
-                    _adjustmentTargetOffset = (_adjustmentTargetOffset < 0)? 0 : _pageSize;
-                }else if( _touchMoved < 0 && (_pageIndex > 0) ){
-                    _adjustmentTargetOffset = (_adjustmentTargetOffset > 0)? 0 : -_pageSize;
+        // 両端のタップ判定
+        bool edgePerformed = false;
+        if( _attribute->edgeSize > 0.0f ){
+            if( fabsf(_touchMoved) < 8.0f ){
+                if( _touchLastPoint <= _attribute->edgeSize ){
+                    setPage(getCurrentPage() + 1);
+                    edgePerformed = true;
                 }
-            }else{
-                _adjustmentTargetOffset = 0;
+                if( _touchLastPoint >= _pageSize - _attribute->edgeSize ){
+                    setPage(getCurrentPage() - 1);
+                    edgePerformed = true;
+                }
             }
-            _adjustment = true;
-        }else{
-            _inertiaEnabled = true;
         }
-        
+        //
+        if( !edgePerformed ){
+            // ページ位置補正
+            if( _attribute->pageAdjustment ){
+                if( fabsf(_touchMoved) > _pageSize * _attribute->pageAdjustmentThreshold ){
+                    if( _touchMoved > 0 && (_pageIndex < _pageDatas.size()-1) ){
+                        _adjustmentTargetOffset = (_adjustmentTargetOffset < 0)? 0 : _pageSize;
+                    }else if( _touchMoved < 0 && (_pageIndex > 0) ){
+                        _adjustmentTargetOffset = (_adjustmentTargetOffset > 0)? 0 : -_pageSize;
+                    }
+                }else{
+                    _adjustmentTargetOffset = 0;
+                }
+                _adjustment = true;
+            }else{
+                //慣性
+                _inertiaEnabled = true;
+            }
+        }
+        //
         _touching = false;
     };
     getEventDispatcher()->addEventListenerWithSceneGraphPriority(touch, this);
@@ -464,6 +484,8 @@ void ComicView::setPage(int32_t page){
     if( _pageIndex == newPageIndex )
         return;
     _pageIndex = newPageIndex;
+    
+    _pageOffset = 0;
     
     if( _pageIndex == 0 || _pageIndex+1 == _pageDatas.size() ){
         _adjustmentTargetOffset = 0;
