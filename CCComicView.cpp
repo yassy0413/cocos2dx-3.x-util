@@ -244,10 +244,12 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
             if( fabsf(_touchMoved) < 8.0f ){
                 if( _touchLastPoint <= _attribute->edgeSize ){
                     setPage(getCurrentPage() + 1);
+                    _pageOffset = 0;
                     edgePerformed = true;
                 }
                 if( _touchLastPoint >= _pageSize - _attribute->edgeSize ){
                     setPage(getCurrentPage() - 1);
+                    _pageOffset = 0;
                     edgePerformed = true;
                 }
             }
@@ -484,8 +486,6 @@ void ComicView::setPage(int32_t page){
     if( _pageIndex == newPageIndex )
         return;
     _pageIndex = newPageIndex;
-    
-    _pageOffset = 0;
     
     if( _pageIndex == 0 || _pageIndex+1 == _pageDatas.size() ){
         _adjustmentTargetOffset = 0;
