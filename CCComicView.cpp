@@ -13,13 +13,14 @@ NS_CC_EXT_BEGIN
 
 ComicView::Attribute::Attribute()
 : direction(Direction::Horizontal)
+, cacheRange(3)
 , pageAdjustment(true)
 , pageAdjustmentSpeed(6.0f)
 , pageAdjustmentThreshold(0.05f)
 , pageAdjustmentLowSpeed(4.0f)
 , inertiaDumpingForce(100.0f)
 , edgeSize(128)
-, cacheRange(3)
+, relationSeconds(0.2f)
 {}
 
 
@@ -159,16 +160,17 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
     //
     _pageImageThread = std::thread([this](){
         while( auto p = _pageImageQueue.pop_wait() ){
-            CC_ASSERT(!p->loading);
             CC_SCOPED_CLODK("***** LoadImage");
-            
-            if( !p->image ){
-                p->image = new (std::nothrow) Image();
-                p->image->initWithImageData((unsigned char*)p->data.data(), p->data.size());
+            if( p->loading ){
+                p->initializing = false;
+            }else{
+                if( !p->image ){
+                    p->image = new (std::nothrow) Image();
+                    p->image->initWithImageData((unsigned char*)p->data.data(), p->data.size());
+                }
+                p->initializing = false;
+                _pageImageReadyQueue.push(p);
             }
-            p->initializing = false;
-            
-            _pageImageReadyQueue.push(p);
         }
     });
     
@@ -215,6 +217,7 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
             
             _touching = true;
             _touchMoved = 0;
+            _touchingSeconds = 0;
             _inertiaEnabled = false;
             _inertiaSpeed = 0;
             return true;
@@ -234,8 +237,11 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
         _touchLastPoint = point;
         
         _touchMoved += diff;
-        _pageOffset += diff;
         _inertiaSpeed = diff;
+        
+        if( !_adjustment && (_attribute->relationSeconds < _touchingSeconds) ){
+            _pageOffset += diff;
+        }
     };
     touch->onTouchEnded = [this](Touch* touch, Event*){
         // 両端のタップ判定
@@ -243,13 +249,29 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
         if( _attribute->edgeSize > 0.0f ){
             if( fabsf(_touchMoved) < 8.0f ){
                 if( _touchLastPoint <= _attribute->edgeSize ){
-                    setPage(getCurrentPage() + 1);
-                    _pageOffset = 0;
+                    if( _pageIndex + 1 < _pageDatas.size() ){
+                        if( _attribute->pageAdjustment ){
+                            _adjustmentTargetOffset += _pageSize;
+                            _adjustment = true;
+                        }else{
+                            setPage(getCurrentPage() + 1);
+                            _pageOffset = 0;
+                        }
+                    }
+                    
                     edgePerformed = true;
                 }
                 if( _touchLastPoint >= _pageSize - _attribute->edgeSize ){
-                    setPage(getCurrentPage() - 1);
-                    _pageOffset = 0;
+                    if( _pageIndex > 0 ){
+                        if( _attribute->pageAdjustment ){
+                            _adjustmentTargetOffset -= _pageSize;
+                            _adjustment = true;
+                        }else{
+                            setPage(getCurrentPage() - 1);
+                            _pageOffset = 0;
+                        }
+                    }
+                    
                     edgePerformed = true;
                 }
             }
@@ -302,37 +324,22 @@ void ComicView::onExit(){
 
 void ComicView::update(float delta){
     
-    delta = std::min(delta, Director::getInstance()->getAnimationInterval());
+    delta = std::min<float>(delta, Director::getInstance()->getAnimationInterval());
     
-    // 別スレッドで読み込んだイメージからテクスチャを作成し、表示対象があれば適用する
-    if( auto pageData = _pageImageReadyQueue.pop() ){
-        
-        auto it = std::find_if(_pageViews.begin(), _pageViews.end(), [pageData](const PageView& pageView){
-            return pageData->index == pageView.index;
-        });
-        if( it == _pageViews.end() ){
-            // 対象がいなくなっているので削除
-            pageData->clear();
-        }else{
-            it->sprite->setVisible(true);
-            it->loadingNode->setVisible(false);
-            updatePage(*it, *pageData);
-        }
+    if( _touching ){
+        _touchingSeconds += delta;
     }
     
     // 目的のページへとオフセットを進める
     if( _adjustment ){
-        if( !_touching ){
-            const float diff = _adjustmentTargetOffset - _pageOffset;
-            if( fabsf(diff) <= _attribute->pageAdjustmentLowSpeed ){
-                _pageOffset = _adjustmentTargetOffset;
-                _adjustmentTargetOffset = 0;
-                _adjustment = false;
-            }else{
-                const float add = diff * (delta * _attribute->pageAdjustmentSpeed);
-                const float sign = (add < 0.0f)? -1.0f : 1.0f ;
-                _pageOffset += std::max(_attribute->pageAdjustmentLowSpeed, fabsf(add)) * sign;
-            }
+        const float diff = _adjustmentTargetOffset - _pageOffset;
+        if( fabsf(diff) <= _attribute->pageAdjustmentLowSpeed ){
+            _pageOffset = _adjustmentTargetOffset;
+            _adjustment = false;
+        }else{
+            const float add = diff * (delta * _attribute->pageAdjustmentSpeed);
+            const float sign = (add < 0.0f)? -1.0f : 1.0f ;
+            _pageOffset += std::max(_attribute->pageAdjustmentLowSpeed, fabsf(add)) * sign;
         }
         
     }else if( _inertiaEnabled ){// 慣性を効かせる
@@ -356,9 +363,11 @@ void ComicView::update(float delta){
     if( !_attribute->pageAdjustment || !_touching ){
         if( _pageOffset >= _pageSize ){
             _pageOffset -= _pageSize;
+            _adjustmentTargetOffset -= _pageSize;
             advancePage(+1);
         }else if( _pageOffset <= -_pageSize ){
             _pageOffset += _pageSize;
+            _adjustmentTargetOffset += _pageSize;
             advancePage(-1);
         }
     }
@@ -378,6 +387,22 @@ void ComicView::update(float delta){
     
     //
     updateSpritePosition();
+    
+    // 別スレッドで読み込んだイメージからテクスチャを作成し、表示対象があれば適用する
+    if( auto pageData = _pageImageReadyQueue.pop() ){
+        
+        auto it = std::find_if(_pageViews.begin(), _pageViews.end(), [pageData](const PageView& pageView){
+            return pageData->index == pageView.index;
+        });
+        if( it == _pageViews.end() ){
+            // 対象がいなくなっているので削除
+            pageData->clear();
+        }else{
+            it->sprite->setVisible(true);
+            it->loadingNode->setVisible(false);
+            updatePage(*it, *pageData);
+        }
+    }
 }
 
 void ComicView::setContentSize(const Size& contentSize){
@@ -461,7 +486,7 @@ void ComicView::updateSpritePosition(){
 }
 
 void ComicView::updatePage(PageView& pageView, PageData& pageData){
-
+    
     if( !pageData.texture ){
         pageData.texture = new (std::nothrow) Texture2D();
         CC_SCOPED_CLODK("***** updatePage");
@@ -489,6 +514,7 @@ void ComicView::setPage(int32_t page){
     
     if( _pageIndex == 0 || _pageIndex+1 == _pageDatas.size() ){
         _adjustmentTargetOffset = 0;
+        _pageOffset = 0;
     }
     
     std::list<int32_t> lostIndices;
@@ -549,7 +575,9 @@ void ComicView::setPage(int32_t page){
     
     for( const int32_t lostIndex : lostIndices ){
         // 対象がいなくなっているのでグラフィックリソースを削除
-        _pageDatas[lostIndex].clear();
+        if( lostIndex < _pageDatas.size() ){
+            _pageDatas[lostIndex].clear();
+        }
     }
     
     if( _attribute->onUpdatePageIndex ){

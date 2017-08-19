@@ -24,8 +24,10 @@ public:
      * ページの進行方向
      */
     enum class Direction {
-        Vertical, /// 垂直方向
-        Horizontal, /// 水平方向
+        /// 垂直方向
+        Vertical,
+         /// 水平方向
+        Horizontal,
     };
     
     /**
@@ -55,6 +57,8 @@ public:
         float inertiaDumpingForce;
         /// 両端のタッチ判定サイズ
         float edgeSize;
+        /// フリック時の引っ掛かり時間
+        float relationSeconds;
         
         /// 閲覧ページの変更通知
         std::function<void(ComicView* sender)> onUpdatePageIndex;
@@ -175,6 +179,7 @@ private:
     float _touchLastPoint;
     float _touchMoved;
     bool _touching;
+    float _touchingSeconds;
     
     std::string makePath(const std::string& url) const;
     void startDownload(PageData& pageData);
