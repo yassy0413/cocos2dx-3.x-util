@@ -64,6 +64,8 @@ public:
         std::function<void(ComicView* sender)> onUpdatePageIndex;
         /// Loadingノードの生成
         std::function<Node*()> onCreateLoadingNode;
+        /// 両端に引っかからずにタップ判定を得た時
+        std::function<void(ComicView* sender)> onTapped;
     };
     
 public:

@@ -105,7 +105,8 @@ ComicView* ComicView::createWithAttribute(std::unique_ptr<Attribute> attribute){
 }
 
 ComicView::ComicView()
-: _pageOffset(0)
+: _pageIndex(-1)
+, _pageOffset(0)
 , _touchMoved(0)
 , _adjustment(false)
 , _inertiaEnabled(false)
@@ -244,10 +245,11 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
         }
     };
     touch->onTouchEnded = [this](Touch* touch, Event*){
-        // 両端のタップ判定
-        bool edgePerformed = false;
-        if( _attribute->edgeSize > 0.0f ){
-            if( fabsf(_touchMoved) < 8.0f ){
+        bool tapped = false;
+        // タップ判定
+        if( fabsf(_touchMoved) < 8.0f ){
+            // 両端
+            if( _attribute->edgeSize > 0.0f ){
                 if( _touchLastPoint <= _attribute->edgeSize ){
                     if( _pageIndex + 1 < _pageDatas.size() ){
                         if( _attribute->pageAdjustment ){
@@ -259,7 +261,7 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
                         }
                     }
                     
-                    edgePerformed = true;
+                    tapped = true;
                 }
                 if( _touchLastPoint >= _pageSize - _attribute->edgeSize ){
                     if( _pageIndex > 0 ){
@@ -272,12 +274,19 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
                         }
                     }
                     
-                    edgePerformed = true;
+                    tapped = true;
+                }
+            }
+            // 中央
+            if( _attribute->onTapped ){
+                if( _attribute->edgeSize < _touchLastPoint && _touchLastPoint < (_pageSize - _attribute->edgeSize) ){
+                    _attribute->onTapped(this);
+                    tapped = true;
                 }
             }
         }
         //
-        if( !edgePerformed ){
+        if( !tapped ){
             // ページ位置補正
             if( _attribute->pageAdjustment ){
                 if( fabsf(_touchMoved) > _pageSize * _attribute->pageAdjustmentThreshold ){
@@ -302,19 +311,14 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
     _touchEvent = touch;
     
     //
-    update(0);
+    setContentSize(Director::getInstance()->getWinSize());
     setPage(0);
-    
     return true;
 }
 
 void ComicView::onEnter(){
     Node::onEnter();
     scheduleUpdate();
-    
-    if( getContentSize().equals(Size::ZERO) ){
-        setContentSize(Director::getInstance()->getWinSize());
-    }
 }
 
 void ComicView::onExit(){
@@ -342,8 +346,8 @@ void ComicView::update(float delta){
             _pageOffset += std::max(_attribute->pageAdjustmentLowSpeed, fabsf(add)) * sign;
         }
         
-    }else if( _inertiaEnabled ){// 慣性を効かせる
-        
+    }else if( _inertiaEnabled ){
+        // 慣性を効かせる
         const float sign = (_inertiaSpeed>0)? 1.0f : -1.0f ;
         
         static const float limit_speed = 50.0f;
@@ -385,11 +389,8 @@ void ComicView::update(float delta){
         }
     }
     
-    //
-    updateSpritePosition();
-    
     // 別スレッドで読み込んだイメージからテクスチャを作成し、表示対象があれば適用する
-    if( auto pageData = _pageImageReadyQueue.pop() ){
+    while( auto pageData = _pageImageReadyQueue.pop() ){
         
         auto it = std::find_if(_pageViews.begin(), _pageViews.end(), [pageData](const PageView& pageView){
             return pageData->index == pageView.index;
@@ -403,6 +404,9 @@ void ComicView::update(float delta){
             updatePage(*it, *pageData);
         }
     }
+    
+    //
+    updateSpritePosition();
 }
 
 void ComicView::setContentSize(const Size& contentSize){
@@ -604,6 +608,9 @@ ComicView* createComicViewSample(const std::vector<std::string>& urlList, bool v
     }
     attr->onUpdatePageIndex = [labelPage](cocos2d::extension::ComicView* sender){
         labelPage->setString(cocos2d::StringUtils::format("%d/%d", sender->getCurrentPage()+1, sender->getNumPages()));
+    };
+    attr->onTapped = [labelPage](cocos2d::extension::ComicView* sender){
+        labelPage->setVisible(!labelPage->isVisible());
     };
     attr->onCreateLoadingNode = [](){
         auto label = cocos2d::Label::createWithSystemFont("Loading...", "Helvetica", 48);
