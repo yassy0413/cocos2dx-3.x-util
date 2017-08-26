@@ -20,7 +20,7 @@ public:
     CREATE_FUNC(DeviceMotion);
     
     /// 回転姿勢の取得
-    inline const Quaternion& getQuat() const { return _quat; }
+    Quaternion getQuat() const;
     
     virtual void update(float delta);
     

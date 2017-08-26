@@ -17,7 +17,8 @@
 
 -(id) init {
     if( self = [super init] ){
-        [self startMotionWithReferenceFrame:CMAttitudeReferenceFrameXTrueNorthZVertical];
+        //CMAttitudeReferenceFrameXTrueNorthZVertical
+        [self startMotionWithReferenceFrame:CMAttitudeReferenceFrameXArbitraryCorrectedZVertical];
     }
     return self;
 }
@@ -32,8 +33,8 @@
         _motionManager = [[CMMotionManager alloc] init];
     }
     if( _motionManager.deviceMotionAvailable ){
-        _motionManager.showsDeviceMovementDisplay = YES;
         _motionManager.deviceMotionUpdateInterval = cocos2d::Director::getInstance()->getAnimationInterval();
+        _motionManager.showsDeviceMovementDisplay = YES;
         [_motionManager startDeviceMotionUpdatesUsingReferenceFrame:frame];
     }
 }
@@ -79,6 +80,14 @@ void DeviceMotion::update(float delta){
         _quat.set(q.x, q.y, q.z, q.w);
     }
 #endif
+}
+
+Quaternion DeviceMotion::getQuat() const {
+    // for portrait
+    Quaternion q, q2;
+    Quaternion::createFromAxisAngle(Vec3::UNIT_Z, M_PI, &q);
+    Quaternion::createFromAxisAngle(Vec3::UNIT_X, M_PI_2, &q2);
+    return q * q2 * _quat;
 }
 
 NS_CC_EXT_END

@@ -22,5 +22,9 @@ bool DeviceMotion::init(){
 void DeviceMotion::update(float delta){
 }
 
+Quaternion DeviceMotion::getQuat() const {
+    return _quat;
+}
+
 NS_CC_EXT_END
 #endif
