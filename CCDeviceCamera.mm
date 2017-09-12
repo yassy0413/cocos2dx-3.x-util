@@ -7,23 +7,19 @@
 #import <AVFoundation/AVFoundation.h>
 
 @interface CCDeviceCamera : NSObject <AVCaptureVideoDataOutputSampleBufferDelegate>
-@property (assign, nonatomic) cocos2d::experimental::FrameBuffer* frameBuffer;
+@property (assign, nonatomic) cocos2d::extension::DeviceCamera* instance;
 @property (retain, nonatomic) AVCaptureSession* avcSession;
 @end
 
 @implementation CCDeviceCamera
 
--(id)init:(cocos2d::extension::DeviceCameraSprite::CaptureDevicePosition)pos
-  quality:(cocos2d::extension::DeviceCameraSprite::Quality)quality
+-(id)init:(cocos2d::extension::DeviceCamera::CaptureDevicePosition)pos
+  quality:(cocos2d::extension::DeviceCamera::Quality)quality
+   target:(cocos2d::extension::DeviceCamera*)target
 {
+    _instance = target;
+    
     // 入力デバイスの作成
-    if( pos == cocos2d::extension::DeviceCameraSprite::CaptureDevicePosition::Default ){
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
-        pos = cocos2d::extension::DeviceCameraSprite::CaptureDevicePosition::Back;
-#else
-        pos = cocos2d::extension::DeviceCameraSprite::CaptureDevicePosition::Front;
-#endif
-    }
     const AVCaptureDevicePosition avCaptureDevicePosition[] = {
         AVCaptureDevicePositionFront,
         AVCaptureDevicePositionBack,
@@ -61,6 +57,8 @@
             _avcSession.sessionPreset = presets[static_cast<int>(quality)];
             [_avcSession addInput:input];
             [_avcSession addOutput:output];
+            // 開始
+            [_avcSession startRunning];
         }
     }
     
@@ -83,21 +81,8 @@
     //    [_avcSession commitConfiguration];
 }
 
--(void)startCamera {
-    if( _avcSession ){
-        [_avcSession startRunning];
-    }
-}
-
--(void)stopCamera {
-    if( _avcSession ){
-        [_avcSession stopRunning];
-    }
-}
-
 // AVCSessionから毎フレーム呼び出される
 -(void)captureOutput:(AVCaptureOutput*)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection*)connection {
-//    connection.videoOrientation = AVCaptureVideoOrientationPortrait;
     CVImageBufferRef buffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     CVPixelBufferLockBaseAddress(buffer, 0);
     
@@ -112,83 +97,32 @@
         pixel += 4;
     }
     
-    if( !_frameBuffer ){
-        _frameBuffer = cocos2d::experimental::FrameBuffer::create(1, width, height);
-        _frameBuffer->retain();
-        _frameBuffer->attachRenderTarget( cocos2d::experimental::RenderTarget::create(width, height, cocos2d::Texture2D::PixelFormat::RGBA8888) );
-        _frameBuffer->attachDepthStencilTarget( nullptr );
-    }else{
-        _frameBuffer->getRenderTarget()->getTexture()->updateWithData(base, 0, 0, width, height);
-    }
+    _instance->applyImage(base, width, height);
     
-    // イメージバッファのアンロック
-    CVPixelBufferUnlockBaseAddress( buffer, 0 );
+    CVPixelBufferUnlockBaseAddress(buffer, 0);
 }
 
 @end
 
 NS_CC_EXT_BEGIN
 
-DeviceCameraSprite* DeviceCameraSprite::create(CaptureDevicePosition pos, Quality quality){
-    auto pRet = new (std::nothrow) DeviceCameraSprite();
-    if( pRet && pRet->init(pos, quality) ){
-        pRet->autorelease();
-        return pRet;
+void DeviceCamera::start(CaptureDevicePosition pos, Quality quality){
+    if( !_internal ){
+        setPosition(pos);
+        _internal = [[CCDeviceCamera alloc] init:_position quality:quality target:this];
+        cocos2d::Director::getInstance()->getScheduler()->scheduleUpdate(this, 0, false);
     }
-    delete pRet;
-    return nullptr;
 }
 
-DeviceCameraSprite::DeviceCameraSprite()
-: _internal(nullptr)
-{}
-
-DeviceCameraSprite::~DeviceCameraSprite(){
+void DeviceCamera::stop(){
     if( CCDeviceCamera* internal = (CCDeviceCamera*)_internal ){
         [internal release];
+        _internal = nullptr;
+        cocos2d::Director::getInstance()->getScheduler()->unscheduleUpdate(this);
     }
 }
 
-bool DeviceCameraSprite::init(CaptureDevicePosition pos, Quality quality){
-    if( Sprite::init() ){
-        _internal = [[CCDeviceCamera alloc] init:pos quality:quality];
-        return true;
-    }
-    return false;
-}
-
-void DeviceCameraSprite::start(){
-    if( CCDeviceCamera* internal = (CCDeviceCamera*)_internal ){
-        [internal startCamera];
-    }
-}
-
-void DeviceCameraSprite::stop(){
-    if( CCDeviceCamera* internal = (CCDeviceCamera*)_internal ){
-        [internal stopCamera];
-    }
-}
-
-void DeviceCameraSprite::onEnter(){
-    Sprite::onEnter();
-    scheduleUpdate();
-}
-
-void DeviceCameraSprite::onExit(){
-    Sprite::onExit();
-    unscheduleUpdate();
-}
-
-void DeviceCameraSprite::update(float delta){
-    if( CCDeviceCamera* internal = (CCDeviceCamera*)_internal ){
-        if( getContentSize().equals(cocos2d::Size::ZERO) && internal.frameBuffer ){
-            initWithTexture(internal.frameBuffer->getRenderTarget()->getTexture());
-            setScale(cocos2d::Director::getInstance()->getWinSize().height / getContentSize().height);
-            setRotation(90);
-            setBlendFunc(cocos2d::BlendFunc::DISABLE);
-            setPosition(cocos2d::Director::getInstance()->getWinSize() * 0.5f);
-        }
-    }
+void DeviceCamera::update(float delta){
 }
 
 NS_CC_EXT_END

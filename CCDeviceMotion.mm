@@ -7,77 +7,54 @@
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
 #import <AVFoundation/AVFoundation.h>
 #import <CoreMotion/CoreMotion.h>
-
-@interface CCDeviceMotion : NSObject
-@property (assign, nonatomic) cocos2d::Quaternion quat;
-@property (retain, nonatomic) CMMotionManager* motionManager;
-@end
-
-@implementation CCDeviceMotion
-
--(id) init {
-    if( self = [super init] ){
-        //CMAttitudeReferenceFrameXTrueNorthZVertical
-        [self startMotionWithReferenceFrame:CMAttitudeReferenceFrameXArbitraryCorrectedZVertical];
-    }
-    return self;
-}
-
-- (void)dealloc {
-    [self stopMotion];
-    [super dealloc];
-}
-
--(void) startMotionWithReferenceFrame:(CMAttitudeReferenceFrame)frame {
-    if( !_motionManager ){
-        _motionManager = [[CMMotionManager alloc] init];
-    }
-    if( _motionManager.deviceMotionAvailable ){
-        _motionManager.deviceMotionUpdateInterval = cocos2d::Director::getInstance()->getAnimationInterval();
-        _motionManager.showsDeviceMovementDisplay = YES;
-        [_motionManager startDeviceMotionUpdatesUsingReferenceFrame:frame];
-    }
-}
-
--(void) stopMotion {
-    if( _motionManager ){
-        [_motionManager stopDeviceMotionUpdates];
-        [_motionManager release];
-        _motionManager = nil;
-    }
-}
-
-@end
+static CMMotionManager* motionManager = nil;
 #endif
 
 NS_CC_EXT_BEGIN
 
-DeviceMotion::DeviceMotion(){
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
-    _internal = [[CCDeviceMotion alloc] init];
-    cocos2d::Director::getInstance()->getScheduler()->scheduleUpdate(this, 0, false);
-    update(0);
-#endif
-}
+DeviceMotion::DeviceMotion()
+{}
 
 DeviceMotion::~DeviceMotion(){
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
-    cocos2d::Director::getInstance()->getScheduler()->unscheduleUpdate(this);
-    CCDeviceMotion* internal = (CCDeviceMotion*)_internal;
-    [internal release];
-#endif
-}
-
-bool DeviceMotion::init(){
-    return true;
+    stop();
 }
 
 void DeviceMotion::update(float delta){
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
-    CCDeviceMotion* internal = (CCDeviceMotion*)_internal;
-    if( internal.motionManager ){
-        const CMQuaternion& q(internal.motionManager.deviceMotion.attitude.quaternion);
+    if( motionManager ){
+        const CMQuaternion& q(motionManager.deviceMotion.attitude.quaternion);
         _quat.set(q.x, q.y, q.z, q.w);
+    }
+#endif
+}
+
+void DeviceMotion::start(){
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+    if( !motionManager ){
+        motionManager = [[CMMotionManager alloc] init];
+        
+        if( motionManager.deviceMotionAvailable ){
+            motionManager.deviceMotionUpdateInterval = cocos2d::Director::getInstance()->getAnimationInterval();
+            [motionManager startDeviceMotionUpdatesUsingReferenceFrame:CMAttitudeReferenceFrameXArbitraryCorrectedZVertical];
+            
+            cocos2d::Director::getInstance()->getScheduler()->scheduleUpdate(this, 0, false);
+            update(0);
+        }else{
+            [motionManager release];
+            motionManager = nil;
+        }
+    }
+#endif
+}
+
+void DeviceMotion::stop(){
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+    if( motionManager ){
+        [motionManager stopDeviceMotionUpdates];
+        [motionManager release];
+        motionManager = nil;
+        
+        cocos2d::Director::getInstance()->getScheduler()->unscheduleUpdate(this);
     }
 #endif
 }
@@ -89,5 +66,10 @@ Quaternion DeviceMotion::getQuat() const {
     Quaternion::createFromAxisAngle(Vec3::UNIT_X, M_PI_2, &q2);
     return q * q2 * _quat;
 }
+
+void DeviceMotion::setQuat(const Quaternion& q){
+    _quat = q;
+}
+
 
 NS_CC_EXT_END

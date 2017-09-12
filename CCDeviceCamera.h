@@ -12,12 +12,13 @@ NS_CC_EXT_BEGIN
 
 /**
  * デバイスカメラの映像をスプライトとして扱う
- * @required CoreMedia.framework
+ * @required iOS CoreMedia.framework
+ * @required Android <uses-permission android:name="android.permission.CAMERA"/>
  */
-class DeviceCameraSprite
-: public Sprite
+class DeviceCamera
 {
 public:
+    CC_DISALLOW_COPY_AND_ASSIGN(DeviceCamera);
     
     /// カメラの位置
     enum class CaptureDevicePosition {
@@ -33,26 +34,41 @@ public:
         High
     };
     
-    static DeviceCameraSprite* create(CaptureDevicePosition pos = CaptureDevicePosition::Default,
-                                      Quality quality = Quality::Medium);
+    /** Return the shared instance **/
+    static DeviceCamera *getInstance();
     
-    void start();
+    /** Relase the shared instance **/
+    static void destroyInstance();
+    
+    ///
+    void start(CaptureDevicePosition pos = CaptureDevicePosition::Default,
+               Quality quality = Quality::Medium);
+    
+    ///
     void stop();
     
-    virtual void onEnter() override;
-    virtual void onExit() override;
-    virtual void update(float delta) override;
+    ///
+    Texture2D* getTexture();
     
-CC_CONSTRUCTOR_ACCESS:
+    ///
+    Sprite* createSprite(const std::function<void(Sprite* sender)>& onCreated = nullptr);
     
-    DeviceCameraSprite();
-    virtual ~DeviceCameraSprite();
     
-    virtual bool init(CaptureDevicePosition pos, Quality quality);
+    virtual void update(float delta);
+    void applyImage(const void* data, int32_t width, int32_t height);
+    void* getInternal(){ return _internal; }
     
 private:
+    DeviceCamera();
+    virtual ~DeviceCamera();
+    
+    void setPosition(CaptureDevicePosition pos);
+    void clearSprites();
+    
     void* _internal;
-    experimental::FrameBuffer* _frameBuffer;
+    experimental::RenderTarget* _renderTarget;
+    CaptureDevicePosition _position;
+    std::vector<std::pair<Sprite*, std::function<void(Sprite* sender)>>> _sprites;
 };
 
 NS_CC_EXT_END

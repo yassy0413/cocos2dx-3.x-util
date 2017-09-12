@@ -22,6 +22,8 @@ typedef std::function<void(bool succeeded)> ccZipDownloaderCallback;
 class ZipDownloader
 {
 public:
+    CC_DISALLOW_COPY_AND_ASSIGN(ZipDownloader);
+    
     /** Return the shared instance **/
     static ZipDownloader *getInstance();
     
