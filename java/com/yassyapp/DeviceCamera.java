@@ -27,6 +27,8 @@ public class DeviceCamera implements Camera.PreviewCallback, Callback {
     private Camera mCamera = null;
     private byte[] mFrameBuffer = null;
     private boolean mFacingBack;
+    private int mWidth;
+    private int mHeight;
     private SurfaceView mSurfaceView = null;
 
     public native void updateFrameBuffer(byte[] bytes, int width, int height);
@@ -41,6 +43,8 @@ public class DeviceCamera implements Camera.PreviewCallback, Callback {
         }
         mInstance = new DeviceCamera();
         mInstance.mFacingBack = back;
+        mInstance.mWidth = width;
+        mInstance.mHeight = height;
 
         Cocos2dxActivity activity = (Cocos2dxActivity)Cocos2dxActivity.getContext();
         activity.runOnUiThread(new Runnable() {
@@ -72,20 +76,25 @@ public class DeviceCamera implements Camera.PreviewCallback, Callback {
         }
 
         if( mCamera != null ){
+            Camera.Size cameraSize = null;
             Camera.Parameters parameters = mCamera.getParameters();
             parameters.setPreviewFormat(ImageFormat.NV21);
-            List<Camera.Size> sizes = parameters.getSupportedPreviewSizes();
-            for( int llp = 0; llp < sizes.size(); ++llp ) {
-                Camera.Size optimalSize = sizes.get(llp);
-                Log.d("yassyapp", "***** CameraSize! " + optimalSize.width + "," + optimalSize.height);
+            {//
+                int minDiff = Integer.MAX_VALUE;
+                List<Camera.Size> sizes = parameters.getSupportedPreviewSizes();
+                for( int lp = 0; lp < sizes.size(); ++lp ) {
+                    Camera.Size s = sizes.get(lp);
+                    int diff = Math.abs(s.width - mWidth) + Math.abs(s.height - mHeight);
+                    if( minDiff > diff ){
+                        minDiff = diff;
+                        cameraSize = s;
+                    }
+                }
+                parameters.setPreviewSize(cameraSize.width, cameraSize.height);
             }
-            Camera.Size optimalSize = sizes.get(sizes.size()/2);
-            int width = optimalSize.width;
-            int height = optimalSize.height;
-            parameters.setPreviewSize(width, height);
             mCamera.setParameters(parameters);
 
-            int size = width * height * ImageFormat.getBitsPerPixel(parameters.getPreviewFormat()) / 8;
+            int size = cameraSize.width * cameraSize.height * ImageFormat.getBitsPerPixel(parameters.getPreviewFormat()) / 8;
             mFrameBuffer = new byte[size];
             try {
                 mCamera.setPreviewDisplay(mSurfaceView.getHolder());

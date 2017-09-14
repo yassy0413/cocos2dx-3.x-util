@@ -109,8 +109,8 @@ NS_CC_EXT_BEGIN
 void DeviceCamera::start(CaptureDevicePosition pos, Quality quality){
     if( !_internal ){
         setPosition(pos);
-        _internal = [[CCDeviceCamera alloc] init:_position quality:quality target:this];
         cocos2d::Director::getInstance()->getScheduler()->scheduleUpdate(this, 0, false);
+        _internal = [[CCDeviceCamera alloc] init:_position quality:quality target:this];
     }
 }
 

@@ -175,12 +175,19 @@ NS_CC_EXT_BEGIN
 
 void DeviceCamera::start(CaptureDevicePosition pos, Quality quality){
     if( !_internal ){
-        _internal = new (std::nothrow) ImageBuffer();
         setPosition(pos);
-        cocos2d::Director::getInstance()->getScheduler()->scheduleUpdate(this, 0, false);
+        Director::getInstance()->getScheduler()->scheduleUpdate(this, 0, false);
+        _internal = new (std::nothrow) ImageBuffer();
         
-        int width = cocos2d::Director::getInstance()->getWinSize().width;
-        int height = cocos2d::Director::getInstance()->getWinSize().height;
+        float scale = 1.0f;
+        if( quality == Quality::Medium ){
+            scale = 0.5f;
+        }else if( quality == Quality::Low ){
+            scale = 0.25f;
+        }
+        const auto frameSize = Director::getInstance()->getOpenGLView()->getFrameSize();
+        const int width = frameSize.width * scale;
+        const int height = frameSize.height * scale;
         
         cocos2d::JniMethodInfo t;
         if( cocos2d::JniHelper::getStaticMethodInfo(t, CLASS_NAME, "start", "(IIZ)V") ){
@@ -200,7 +207,7 @@ void DeviceCamera::stop(){
         
         delete internal;
         _internal = nullptr;
-        cocos2d::Director::getInstance()->getScheduler()->unscheduleUpdate(this);
+        Director::getInstance()->getScheduler()->unscheduleUpdate(this);
     }
 }
 

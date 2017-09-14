@@ -11,7 +11,7 @@
 NS_CC_EXT_BEGIN
 
 /**
- * デバイスカメラの映像をスプライトとして扱う
+ * デバイスカメラの映像をGLテクスチャとして管理する
  * @required iOS CoreMedia.framework
  * @required Android <uses-permission android:name="android.permission.CAMERA"/>
  */
@@ -40,17 +40,17 @@ public:
     /** Relase the shared instance **/
     static void destroyInstance();
     
-    ///
+    /// 撮影を開始
     void start(CaptureDevicePosition pos = CaptureDevicePosition::Default,
                Quality quality = Quality::Medium);
     
-    ///
+    /// 撮影を終了
     void stop();
     
-    ///
+    /// 撮影中の映像をテクスチャとして取得する
     Texture2D* getTexture();
     
-    ///
+    /// 撮影映像をテクスチャとして持つスプライトを生成する
     Sprite* createSprite(const std::function<void(Sprite* sender)>& onCreated = nullptr);
     
     
