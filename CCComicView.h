@@ -59,6 +59,8 @@ public:
         float edgeSize;
         /// フリック時の引っ掛かり時間
         float relationSeconds;
+        /// TouchMoveでの自動送り判定の閾値 (0.0 - 1.0)
+        float touchMoveAdjustmentThreshold;
         
         /// 閲覧ページの変更通知
         std::function<void(ComicView* sender)> onUpdatePageIndex;

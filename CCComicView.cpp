@@ -20,7 +20,8 @@ ComicView::Attribute::Attribute()
 , pageAdjustmentLowSpeed(4.0f)
 , inertiaDumpingForce(100.0f)
 , edgeSize(128)
-, relationSeconds(0.2f)
+, relationSeconds(0.0f)
+, touchMoveAdjustmentThreshold(0.2f)
 {}
 
 
@@ -205,6 +206,27 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
         addChild(pageView.loadingNode);
     }
     
+    // ページ位置補正
+    const auto adjustPage = [this](){
+        if( _attribute->pageAdjustment ){
+            if( fabsf(_touchMoved) > _pageSize * _attribute->pageAdjustmentThreshold ){
+                if( _touchMoved > 0 && (_pageIndex < _pageDatas.size()-1) ){
+                    _adjustmentTargetOffset += _pageSize;
+                }else if( _touchMoved < 0 && (_pageIndex > 0) ){
+                    _adjustmentTargetOffset -= _pageSize;
+                }
+            }else{
+                _adjustmentTargetOffset = 0;
+            }
+            _adjustment = true;
+            _touchMoved = 0.0f;
+            _touching = false;
+        }else{
+            //慣性
+            _inertiaEnabled = true;
+        }
+    };
+    
     //
     auto touch = EventListenerTouchOneByOne::create();
     touch->onTouchBegan = [this](Touch* touch, Event*){
@@ -225,7 +247,10 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
         }
         return false;
     };
-    touch->onTouchMoved = [this](Touch* touch, Event*){
+    touch->onTouchMoved = [this, adjustPage](Touch* touch, Event*){
+        if( !_touching )
+            return;
+        
         float point;
         const Vec2 touchLocation = getParent()->convertToNodeSpace(touch->getLocation());
         if( _attribute->direction == Direction::Horizontal ){
@@ -240,11 +265,19 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
         _touchMoved += diff;
         _inertiaSpeed = diff;
         
+        if( _attribute->touchMoveAdjustmentThreshold > 0.0f ){
+            if( fabsf(_touchMoved) > _pageSize * _attribute->touchMoveAdjustmentThreshold ){
+                adjustPage();
+            }
+        }
         if( !_adjustment && (_attribute->relationSeconds < _touchingSeconds) ){
             _pageOffset += diff;
         }
     };
-    touch->onTouchEnded = [this](Touch* touch, Event*){
+    touch->onTouchEnded = [this, adjustPage](Touch* touch, Event*){
+        if( !_touching )
+            return;
+        
         bool tapped = false;
         // タップ判定
         if( fabsf(_touchMoved) < 8.0f ){
@@ -288,21 +321,7 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
         //
         if( !tapped ){
             // ページ位置補正
-            if( _attribute->pageAdjustment ){
-                if( fabsf(_touchMoved) > _pageSize * _attribute->pageAdjustmentThreshold ){
-                    if( _touchMoved > 0 && (_pageIndex < _pageDatas.size()-1) ){
-                        _adjustmentTargetOffset = (_adjustmentTargetOffset < 0)? 0 : _pageSize;
-                    }else if( _touchMoved < 0 && (_pageIndex > 0) ){
-                        _adjustmentTargetOffset = (_adjustmentTargetOffset > 0)? 0 : -_pageSize;
-                    }
-                }else{
-                    _adjustmentTargetOffset = 0;
-                }
-                _adjustment = true;
-            }else{
-                //慣性
-                _inertiaEnabled = true;
-            }
+            adjustPage();
         }
         //
         _touching = false;
