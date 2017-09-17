@@ -14,7 +14,7 @@ void Device::dump(){
     CCLOG("SystemVersion %s", getSystemVersion().c_str());
     CCLOG("SystemName %s", getSystemName().c_str());
     CCLOG("Orientation %s", isPortrait()?"PORTRAIT":"LANDSCAPE");
-    CCLOG("DiskFree %f MB", getDiskFreeByates()/1024.0/1024);
+    CCLOG("DiskFree %f MB", getDiskFreeBytes()/1024.0/1024);
 }
 
 NS_CC_EXT_END
@@ -79,11 +79,11 @@ bool Device::isPortrait(){
     return result;
 }
 
-uint64_t Device::getDiskFreeByates(){
+uint64_t Device::getDiskFreeBytes(){
     uint64_t result = 0;
     
     cocos2d::JniMethodInfo t;
-    if( cocos2d::JniHelper::getStaticMethodInfo(t, CLASS_NAME, "getDiskFreeByates", "()J") ){
+    if( cocos2d::JniHelper::getStaticMethodInfo(t, CLASS_NAME, "getDiskFreeBytes", "()J") ){
         result = t.env->CallStaticLongMethod(t.classID, t.methodID);
         t.env->DeleteLocalRef(t.classID);
     }

@@ -25,7 +25,7 @@ public:
     
     static bool isPortrait();
     
-    static uint64_t getDiskFreeByates();
+    static uint64_t getDiskFreeBytes();
     
     static void clearUserDefaults();
     

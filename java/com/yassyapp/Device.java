@@ -50,16 +50,16 @@ public class Device {
         return conf.orientation == Configuration.ORIENTATION_PORTRAIT;
     }
 
-    public static long getDiskFreeByates(){
+    public static long getDiskFreeBytes(){
         if( Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2 ){
             StatFs statFs = new StatFs(Cocos2dxHelper.getCocos2dxWritablePath());
             return statFs.getAvailableBlocks() * statFs.getBlockSize();
         }
-        return getDiskFreeByatesLong();
+        return getDiskFreeBytesLong();
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public static long getDiskFreeByatesLong() {
+    public static long getDiskFreeBytesLong() {
         StatFs statFs = new StatFs(Cocos2dxHelper.getCocos2dxWritablePath());
         return statFs.getAvailableBlocksLong() * statFs.getBlockSizeLong();
     }

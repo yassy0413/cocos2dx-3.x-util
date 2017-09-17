@@ -49,7 +49,7 @@ bool Device::isPortrait(){
 #endif
 }
 
-uint64_t Device::getDiskFreeByates(){
+uint64_t Device::getDiskFreeBytes(){
     uint64_t result = 0;
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
     NSDictionary* dictionary = [[NSFileManager defaultManager] attributesOfFileSystemForPath:[paths lastObject] error:nil];
