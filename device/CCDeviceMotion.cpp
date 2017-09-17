@@ -3,6 +3,7 @@
  https://github.com/yassy0413/cocos2dx-3.x-util
  ****************************************************************************/
 #include "CCDeviceMotion.h"
+#include "CCDevice.h"
 
 #pragma mark -- Common Methods
 
@@ -53,7 +54,6 @@ void DeviceMotion::update(float delta){
 }
 
 void DeviceMotion::start(){
-//    cocos2d::JniHelper::callStaticVoidMethod(CLASS_NAME, "start");
     cocos2d::JniMethodInfo t;
     if( cocos2d::JniHelper::getStaticMethodInfo(t, CLASS_NAME, "start", "()V") ){
         t.env->CallStaticVoidMethod(t.classID, t.methodID);
@@ -70,7 +70,18 @@ void DeviceMotion::stop(){
 }
 
 Quaternion DeviceMotion::getQuat() const {
-    return _quat;
+    if( Device::isPortrait() ){
+        Quaternion q, q2;
+        Quaternion::createFromAxisAngle(Vec3::UNIT_Z, M_PI, &q);
+        Quaternion::createFromAxisAngle(Vec3::UNIT_X, M_PI_2, &q2);
+        return q * q2 * _quat;
+    }else{
+        Quaternion q, q2, q3;
+        Quaternion::createFromAxisAngle(Vec3::UNIT_Y, -M_PI_2, &q);
+        Quaternion::createFromAxisAngle(Vec3::UNIT_Z, -M_PI_2, &q2);
+        Quaternion::createFromAxisAngle(Vec3::UNIT_Z, -M_PI_2, &q3);
+        return q2 * q * _quat * q3;
+    }
 }
 
 void DeviceMotion::setQuat(const Quaternion& q){

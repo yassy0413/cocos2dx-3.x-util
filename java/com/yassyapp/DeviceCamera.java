@@ -16,6 +16,7 @@ import android.view.SurfaceView;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 /**
  * http://techblog.kayac.com/android_slit_scan.html
@@ -54,7 +55,8 @@ public class DeviceCamera implements Camera.PreviewCallback, Callback {
                 Cocos2dxActivity activity = (Cocos2dxActivity)Cocos2dxActivity.getContext();
                 mInstance.mSurfaceView = new SurfaceView(activity);
                 mInstance.mSurfaceView.getHolder().addCallback(mInstance);
-                activity.getFrameLayout().addView(mInstance.mSurfaceView);
+                FrameLayout layout = (FrameLayout)activity.findViewById(android.R.id.content);
+                layout.addView(mInstance.mSurfaceView);
             }
         });
     }

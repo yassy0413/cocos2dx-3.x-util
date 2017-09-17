@@ -72,6 +72,14 @@ namespace intersect {
      * @param v1 終点
      */
     bool segmentAABB(const Vec3& v0, const Vec3& v1, const AABB& aabb) noexcept;
+    
+    /**
+     * スクリーン上の一点と地面の衝突位置を算出
+     * @param out 接触位置
+     * @param screenPosition スクリーン座標
+     * @param camera カメラ
+     */
+    bool groundScreen(Vec3& out, const Vec2& screenPosition, Camera* camera = nullptr) noexcept;
 }
 
 NS_CC_MATH_END

@@ -64,6 +64,7 @@ private:
     
     void setPosition(CaptureDevicePosition pos);
     void clearSprites();
+    void applySprite(Sprite* sprite);
     
     void* _internal;
     experimental::RenderTarget* _renderTarget;

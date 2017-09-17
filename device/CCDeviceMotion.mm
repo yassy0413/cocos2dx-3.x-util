@@ -3,6 +3,7 @@
  https://github.com/yassy0413/cocos2dx-3.x-util
  ****************************************************************************/
 #include "CCDeviceMotion.h"
+#include "CCDevice.h"
 
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
 #import <AVFoundation/AVFoundation.h>
@@ -60,11 +61,22 @@ void DeviceMotion::stop(){
 }
 
 Quaternion DeviceMotion::getQuat() const {
-    // for portrait
-    Quaternion q, q2;
-    Quaternion::createFromAxisAngle(Vec3::UNIT_Z, M_PI, &q);
-    Quaternion::createFromAxisAngle(Vec3::UNIT_X, M_PI_2, &q2);
-    return q * q2 * _quat;
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+    if( Device::isPortrait() ){
+        Quaternion q, q2;
+        Quaternion::createFromAxisAngle(Vec3::UNIT_Z, M_PI, &q);
+        Quaternion::createFromAxisAngle(Vec3::UNIT_X, M_PI_2, &q2);
+        return q * q2 * _quat;
+    }else{
+        Quaternion q, q2, q3;
+        Quaternion::createFromAxisAngle(Vec3::UNIT_Y, -M_PI_2, &q);
+        Quaternion::createFromAxisAngle(Vec3::UNIT_Z, -M_PI_2, &q2);
+        Quaternion::createFromAxisAngle(Vec3::UNIT_Z, M_PI_2, &q3);
+        return q2 * q * _quat * q3;
+    }
+#else
+    return _quat;
+#endif
 }
 
 void DeviceMotion::setQuat(const Quaternion& q){

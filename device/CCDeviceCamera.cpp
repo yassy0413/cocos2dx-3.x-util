@@ -3,6 +3,7 @@
  https://github.com/yassy0413/cocos2dx-3.x-util
  ****************************************************************************/
 #include "CCDeviceCamera.h"
+#include "CCDevice.h"
 
 #pragma mark -- Common Methods
 
@@ -51,10 +52,14 @@ Sprite* DeviceCamera::createSprite(const std::function<void(Sprite* sender)>& on
     Sprite* p;
     if( _renderTarget ){
         p = Sprite::createWithTexture(_renderTarget->getTexture());
+        applySprite(p);
         if( onCreated ){
             onCreated(p);
         }
     }else{
+        if( !_internal ){
+            start();
+        }
         p = Sprite::create();
         p->retain();
         _sprites.emplace_back(p, onCreated);
@@ -67,10 +72,15 @@ void DeviceCamera::applyImage(const void* data, int32_t width, int32_t height){
         _renderTarget = experimental::RenderTarget::create(width, height, Texture2D::PixelFormat::RGBA8888);
         _renderTarget->retain();
         
+        const double scaleFactor = 1.0 / Director::getInstance()->getContentScaleFactor();
+        width *= scaleFactor;
+        height *= scaleFactor;
+        
         for( auto& p : _sprites ){
             if( p.first->getReferenceCount() > 1 ){
                 p.first->setTexture(_renderTarget->getTexture());
                 p.first->setTextureRect(Rect(0, 0, width, height));
+                applySprite(p.first);
                 if( p.second ){
                     p.second(p.first);
                 }
@@ -79,6 +89,21 @@ void DeviceCamera::applyImage(const void* data, int32_t width, int32_t height){
         clearSprites();
     }
     _renderTarget->getTexture()->updateWithData(data, 0, 0, width, height);
+}
+
+void DeviceCamera::applySprite(Sprite* sprite){
+    sprite->setBlendFunc(BlendFunc::DISABLE);
+    sprite->setPosition(Director::getInstance()->getWinSize() * 0.5f);
+    
+    if( Device::isPortrait() ){
+        sprite->setRotation(90);
+        sprite->setScale(Director::getInstance()->getWinSize().height / sprite->getContentSize().height);
+    }else{
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+        sprite->setRotation(180);
+#endif
+        sprite->setScale(Director::getInstance()->getWinSize().width / sprite->getContentSize().width);
+    }
 }
 
 void DeviceCamera::clearSprites(){
@@ -185,7 +210,7 @@ void DeviceCamera::start(CaptureDevicePosition pos, Quality quality){
         }else if( quality == Quality::Low ){
             scale = 0.25f;
         }
-        const auto frameSize = Director::getInstance()->getOpenGLView()->getFrameSize();
+        const auto frameSize = Director::getInstance()->getWinSize() * Director::getInstance()->getContentScaleFactor();
         const int width = frameSize.width * scale;
         const int height = frameSize.height * scale;
         

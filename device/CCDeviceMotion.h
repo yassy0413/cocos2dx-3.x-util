@@ -24,10 +24,10 @@ public:
     /** Relase the shared instance **/
     static void destroyInstance();
     
-    ///
+    /// センサーの起動
     void start();
     
-    ///
+    /// センサーを停止
     void stop();
     
     /// 回転姿勢の取得
@@ -39,12 +39,10 @@ public:
     
     virtual void update(float delta);
     
-CC_CONSTRUCTOR_ACCESS:
-    
+private:
     DeviceMotion();
     virtual ~DeviceMotion();
     
-private:
     Quaternion _quat;
 };
 

@@ -135,6 +135,16 @@ namespace intersect {
         
         return false;
     }
+    
+    bool groundScreen(Vec3& out, const Vec2& screenPosition, Camera* camera) noexcept {
+        if( !camera ){
+            camera = Director::getInstance()->getRunningScene()->getDefaultCamera();
+        }
+        const float h = Director::getInstance()->getWinSize().height;
+        const cocos2d::Vec3 v0 = camera->unproject(cocos2d::Vec3( screenPosition.x, h - screenPosition.y, 0.0f ));
+        const cocos2d::Vec3 v1 = camera->unproject(cocos2d::Vec3( screenPosition.x, h - screenPosition.y, 1.0f ));
+        return segmentPlane(out, v0, v1, Plane(cocos2d::Vec3::UNIT_Y, cocos2d::Vec3::UNIT_X));
+    }
 }
 
 NS_CC_MATH_END

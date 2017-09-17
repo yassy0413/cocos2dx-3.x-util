@@ -41,7 +41,7 @@ public class DeviceMotion implements SensorEventListener {
 
     public static void resume(){
         if( mInstance != null ) {
-            Sensor sensor = mInstance.mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+            Sensor sensor = mInstance.mSensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
             mInstance.mSensorManager.registerListener(mInstance, sensor, SensorManager.SENSOR_DELAY_GAME);
         }
     }
@@ -58,7 +58,7 @@ public class DeviceMotion implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event){
-        if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+        if (event.sensor.getType() == Sensor.TYPE_GAME_ROTATION_VECTOR) {
             mSensorManager.getQuaternionFromVector(mRotationQuat, event.values);
             updateRotationQuat(mRotationQuat);
         }
