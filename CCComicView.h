@@ -148,6 +148,8 @@ private:
         Image* image;
         Texture2D* texture;
         
+        ~PageData();
+        
         /// グラフィックリソースの削除
         void clear();
         /// 先頭8bytesをビット反転して、OSのビューワー等でそのままでは見れないようにする

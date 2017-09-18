@@ -27,6 +27,10 @@ ComicView::Attribute::Attribute()
 
 #pragma mark -- PageData
 
+ComicView::PageData::~PageData(){
+    clear();
+}
+
 void ComicView::PageData::clear(){
     CC_SAFE_RELEASE_NULL(texture);
     CC_SAFE_RELEASE_NULL(image);
@@ -212,6 +216,8 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
         pageView.loadingNode->setVisible(false);
         addChild(pageView.sprite);
         addChild(pageView.loadingNode);
+        pageView.sprite->release();
+        pageView.loadingNode->release();
     }
     
     // ページ位置補正
