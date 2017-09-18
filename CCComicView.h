@@ -64,6 +64,8 @@ public:
         
         /// 閲覧ページの変更通知
         std::function<void(ComicView* sender)> onUpdatePageIndex;
+        /// 最終ページを越えた時の通知
+        std::function<void(ComicView* sender)> onPageOver;
         /// Loadingノードの生成
         std::function<Node*()> onCreateLoadingNode;
         /// 両端に引っかからずにタップ判定を得た時
@@ -142,6 +144,7 @@ private:
         std::vector<char> data;
         bool loading;
         bool initializing;
+        bool http;
         Image* image;
         Texture2D* texture;
         

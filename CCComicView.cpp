@@ -145,7 +145,9 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
                 fseek(fp, 0, SEEK_SET);
                 fread(p->data.data(), p->data.size(), 1, fp);
                 fclose(fp);
-                p->flipData();
+                if( p->http ){
+                    p->flipData();
+                }
             }else{
                 p->flipData();
                 FILE* fp = fopen(p->storagePath.c_str(), "wb");
@@ -182,11 +184,17 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
         auto& pageData = _pageDatas[lp];
         pageData.index = lp;
         pageData.url = _attribute->urlList[lp];
-        pageData.storagePath = makePath(pageData.url);
         pageData.loading = false;
         pageData.initializing = false;
         pageData.image = nullptr;
         pageData.texture = nullptr;
+        
+        pageData.http = (pageData.url.find("http") != std::string::npos);
+        if( pageData.http ){
+            pageData.storagePath = makePath(pageData.url);
+        }else{
+            pageData.storagePath = FileUtils::getInstance()->fullPathForFilename(pageData.url);
+        }
     }
     
     //
@@ -272,6 +280,15 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
         }
         if( !_adjustment && (_attribute->relationSeconds < _touchingSeconds) ){
             _pageOffset += diff;
+            // 最終ページより少し進んだ時
+            if( _pageIndex+1 == _pageDatas.size() ){
+                if( _pageOffset > 10 ){
+                    if( _attribute->onPageOver ){
+                        _attribute->onPageOver(this);
+                        _attribute->onPageOver = nullptr;
+                    }
+                }
+            }
         }
     };
     touch->onTouchEnded = [this, adjustPage](Touch* touch, Event*){
@@ -291,6 +308,12 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
                         }else{
                             setPage(getCurrentPage() + 1);
                             _pageOffset = 0;
+                        }
+                    }else{
+                        // 最終ページより進んだ時
+                        if( _attribute->onPageOver ){
+                            _attribute->onPageOver(this);
+                            _attribute->onPageOver = nullptr;
                         }
                     }
                     
@@ -443,34 +466,30 @@ void ComicView::setTouchEnabled(bool enabled){
 }
 
 std::string ComicView::makePath(const std::string& url) const {
-    if( url.find_first_of("http") == std::string::npos ){
-        return FileUtils::getInstance()->fullPathForFilename(url);
-    }else{
-        std::string filename, dir = _attribute->cacheDir;
-        const auto separator = url.rfind('/');
-        if( separator != std::string::npos ){
-            const std::string domain = url.substr(0, separator);
-            if( !domain.empty() ){
-                char* buf;
-                base64Encode((const unsigned char*)domain.c_str(), (unsigned int)domain.length(), &buf);
-                dir += buf;
-                dir.push_back('/');
-                free(buf);
-            }
-            filename = url.substr(separator+1, std::string::npos);
-            if( !filename.empty() ){
-                char* buf;
-                base64Encode((const unsigned char*)filename.c_str(), (unsigned int)filename.length(), &buf);
-                filename = buf;
-                free(buf);
-            }
+    std::string filename, dir = _attribute->cacheDir;
+    const auto separator = url.rfind('/');
+    if( separator != std::string::npos ){
+        const std::string domain = url.substr(0, separator);
+        if( !domain.empty() ){
+            char* buf;
+            base64Encode((const unsigned char*)domain.c_str(), (unsigned int)domain.length(), &buf);
+            dir += buf;
+            dir.push_back('/');
+            free(buf);
         }
-        if( filename.empty() ){
-            filename = StringUtils::toString( std::hash<std::string>()(url) );
+        filename = url.substr(separator+1, std::string::npos);
+        if( !filename.empty() ){
+            char* buf;
+            base64Encode((const unsigned char*)filename.c_str(), (unsigned int)filename.length(), &buf);
+            filename = buf;
+            free(buf);
         }
-        FileUtils::getInstance()->createDirectory(dir);
-        return dir + filename;
     }
+    if( filename.empty() ){
+        filename = StringUtils::toString( std::hash<std::string>()(url) );
+    }
+    FileUtils::getInstance()->createDirectory(dir);
+    return dir + filename;
 }
 
 void ComicView::startDownload(PageData& pageData){
@@ -627,6 +646,9 @@ ComicView* createComicViewSample(const std::vector<std::string>& urlList, bool v
     }
     attr->onUpdatePageIndex = [labelPage](cocos2d::extension::ComicView* sender){
         labelPage->setString(cocos2d::StringUtils::format("%d/%d", sender->getCurrentPage()+1, sender->getNumPages()));
+    };
+    attr->onPageOver = [labelPage](cocos2d::extension::ComicView* sender){
+        MessageBox("Read Completed", "Comic");
     };
     attr->onTapped = [labelPage](cocos2d::extension::ComicView* sender){
         labelPage->setVisible(!labelPage->isVisible());
