@@ -284,7 +284,7 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
                 adjustPage();
             }
         }
-        if( !_adjustment && (_attribute->relationSeconds < _touchingSeconds) ){
+        if( !_adjustment && (_attribute->relationSeconds <= _touchingSeconds) ){
             _pageOffset += diff;
             // 最終ページより少し進んだ時
             if( _pageIndex+1 == _pageDatas.size() ){
@@ -358,15 +358,23 @@ bool ComicView::initWithAttribute(std::unique_ptr<Attribute> attribute){
     getEventDispatcher()->addEventListenerWithSceneGraphPriority(touch, this);
     _touchEvent = touch;
     
-    //
-    setContentSize(Director::getInstance()->getWinSize());
-    setPage(0);
     return true;
 }
 
 void ComicView::onEnter(){
     Node::onEnter();
     scheduleUpdate();
+    
+    if( _pageIndex < 0 ){
+        if( getContentSize().equals(Size::ZERO) ){
+            if( getParent()->getContentSize().equals(Size::ZERO) ){
+                setContentSize(Director::getInstance()->getWinSize());
+            }else{
+                setContentSize(getParent()->getContentSize());
+            }
+        }
+        setPage(0);
+    }
 }
 
 void ComicView::onExit(){
