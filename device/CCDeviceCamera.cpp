@@ -143,6 +143,9 @@ struct ImageBuffer final {
         }
         
         std::lock_guard<std::mutex> _(mutex);
+        if( dirty )
+            return;
+        dirty = true;
         
         //
         uint32_t* rgba = reinterpret_cast<uint32_t*>(data);
@@ -175,8 +178,6 @@ struct ImageBuffer final {
                 rgba[yp] = 0xff000000 | ((b << 6) & 0xff0000) | ((g >> 2) & 0xff00) | ((r >> 10) & 0xff);
             }
         }
-        
-        dirty = true;
     }
     
     void* data;
@@ -188,7 +189,7 @@ struct ImageBuffer final {
 
 extern "C" {
     JNIEXPORT void JNICALL Java_com_yassyapp_DeviceCamera_updateFrameBuffer(JNIEnv* env, jclass, jbyteArray data, jint width, jint height){
-        if( auto internal = (ImageBuffer*)cocos2d::extension::DeviceCamera::getInstance()->getInternal() ){
+        if( auto internal = reinterpret_cast<ImageBuffer*>(cocos2d::extension::DeviceCamera::getInstance()->getInternal()) ){
             jbyte* yuv = env->GetByteArrayElements(data, nullptr);
             internal->updateFrameBuffer(reinterpret_cast<uint8_t*>(yuv), width, height);
             env->ReleaseByteArrayElements(data, yuv, JNI_ABORT);
@@ -238,8 +239,10 @@ void DeviceCamera::stop(){
 
 void DeviceCamera::update(float delta){
     ImageBuffer* internal = (ImageBuffer*)_internal;
+    
+    std::lock_guard<std::mutex> _(internal->mutex);
     if( internal->dirty ){
-        std::lock_guard<std::mutex> _(internal->mutex);
+        internal->dirty = false;
         applyImage(internal->data, internal->width, internal->height);
     }
 }
