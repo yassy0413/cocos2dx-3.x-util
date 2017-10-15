@@ -43,6 +43,19 @@ int64_t UnixTime::getRemainingSecondsFrom(int64_t unixTime) const {
     return unixTime - getUnixTime();
 }
 
+std::unique_ptr<tm> UnixTime::getGmTime() const {
+    return getGmTimeAfter(0);
+}
+
+std::unique_ptr<tm> UnixTime::getGmTimeAfter(int64_t seconds) const {
+    CCASSERT(_capturedUnixTime > 0, "Not initialized!");
+    const time_t unixtime = static_cast<time_t>(getUnixTime() + seconds);
+    tm* p = new (std::nothrow) tm( *gmtime(&unixtime) );
+    p->tm_year += 1900;
+    p->tm_mon += 1;
+    return std::unique_ptr<tm>(p);
+}
+
 std::unique_ptr<tm> UnixTime::getLocalTime() const {
     return getLocalTimeAfter(0);
 }
@@ -71,10 +84,15 @@ void setupUnixTimeSample(std::function<void(UnixTime* sender)> callback){
         if( it != document.MemberEnd() ){
             CC_ASSERT(it->value.IsDouble());
             UnixTime::getInstance()->setUnixTime( static_cast<int64_t>(it->value.GetDouble()) );
-            const auto tm = UnixTime::getInstance()->getLocalTime();
-            CCLOG("UNIXTime %04d/%02d/%02d %02d:%02d:%02d (%lld)",
+            auto tm = UnixTime::getInstance()->getLocalTime();
+            CCLOG("UNIXTime %04d/%02d/%02d %02d:%02d:%02d @local (%lld)",
                   tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec,
                   UnixTime::getInstance()->getUnixTime());
+            tm = UnixTime::getInstance()->getGmTime();
+            CCLOG("UNIXTime %04d/%02d/%02d %02d:%02d:%02d @gm (%lld)",
+                  tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec,
+                  UnixTime::getInstance()->getUnixTime());
+            
         }
         if( callback ){
             callback(UnixTime::getInstance());

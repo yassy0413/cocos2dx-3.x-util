@@ -45,12 +45,22 @@ public:
     int64_t getRemainingSecondsFrom(int64_t unixTime) const;
     
     /**
-     * 現在の西暦を取得する
+     * 現在の西暦をUTCで取得する
+     */
+    std::unique_ptr<tm> getGmTime() const;
+    
+    /**
+     * 指定秒数後の西暦をUTCで取得する
+     */
+    std::unique_ptr<tm> getGmTimeAfter(int64_t seconds) const;
+    
+    /**
+     * 現在の西暦をLocalTimezoneで取得する
      */
     std::unique_ptr<tm> getLocalTime() const;
     
     /**
-     * 指定秒数後の西暦を取得する
+     * 指定秒数後の西暦をLocalTimezoneで取得する
      */
     std::unique_ptr<tm> getLocalTimeAfter(int64_t seconds) const;
     
