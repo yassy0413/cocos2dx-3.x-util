@@ -42,11 +42,11 @@ void CollectionView::onEnter(){
     if( _tableView )
         return;
     
-    if( getContentSize().equals(cocos2d::Size::ZERO) ){
+    if( getContentSize().equals(Size::ZERO) ){
         setContentSize(getParent()->getContentSize());
     }
     
-    auto OnTableNodeAtIndex = [this](int idx, cocos2d::Node *node){
+    auto OnTableNodeAtIndex = [this](int idx, cocos2d::Node *node, cocos2d::extension::TableView *sender){
         
         if( !node ){
             node = Node::create();
@@ -129,16 +129,16 @@ CollectionViewSample* CollectionViewSample::create(int fontSize){
 void CollectionViewSample::onEnter(){
     Node::onEnter();
     
-    if( getContentSize().equals(cocos2d::Size::ZERO) ){
+    if( getContentSize().equals(Size::ZERO) ){
         setContentSize(getParent()->getContentSize());
     }
     
     const int numItems = 999;
     
-    auto collectionView = cocos2d::extension::CollectionView::create();
+    auto collectionView = extension::CollectionView::create();
     collectionView->setNumberOfItems(numItems);
     collectionView->setNumberOfItemsInRow(5);
-    collectionView->setItemSize(cocos2d::Size(100, 100));
+    collectionView->setItemSize(Size(100, 100));
     collectionView->onItemNodeAtIndex = [this](int idx, cocos2d::Node *node){
         auto item = (Label*)node;
         if( !item ){

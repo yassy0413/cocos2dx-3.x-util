@@ -22,7 +22,7 @@ public:
     // callbacks
     using OnNumberOfCellsInTableView = std::function<ssize_t()>;
     using OnTableCellSizeForIndex = std::function<cocos2d::Size(int idx)>;
-    using OnTableCellAtIndex = std::function<cocos2d::extension::TableViewCell*(int idx, cocos2d::extension::TableView *table)>;
+    using OnTableCellAtIndex = std::function<cocos2d::extension::TableViewCell*(int idx, cocos2d::extension::TableView *sender)>;
     
     /**
      * Creates a table view with lambda.
@@ -49,13 +49,30 @@ protected:
 
 /**
  * Cellのインスタンス管理を簡略化したコールバックを搭載
+ *
+ @sample
+ const auto numberOfCellsInTableView = [](){
+    return num;
+ };
+ const auto tableCellSizeForIndex = [](int idx){
+    return size;
+ };
+ const auto tableNodeAtIndex = [](int idx, cocos2d::Node *node, cocos2d::extension::TableView *sender){
+    if( !node ){
+        node = Node::create()
+    }
+    node->setParam(...);
+    return node;
+ };
+ auto table = cocos2d::extension::TableViewEasyLambda::create(numberOfCellsInTableView, tableCellSizeForIndex, tableNodeAtIndex);
+ addChild(table)
  */
 class TableViewEasyLambda
 : public TableViewLambda
 {
 public:
     // callback
-    using OnTableNodeAtIndex = std::function<cocos2d::Node*(int idx, cocos2d::Node *node)>;
+    using OnTableNodeAtIndex = std::function<cocos2d::Node*(int idx, cocos2d::Node *node, cocos2d::extension::TableView *sender)>;
     
     /**
      * Creates a table view with lambda.

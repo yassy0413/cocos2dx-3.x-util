@@ -79,10 +79,10 @@ TableViewEasyLambda* TableViewEasyLambda::create(Size size,
 TableViewEasyLambda::TableViewEasyLambda()
 : onTableNodeAtIndex(nullptr)
 {
-    onTableCellAtIndex = [this](int idx, TableView *table){
+    onTableCellAtIndex = [this](int idx, TableView *sender){
         CC_ASSERT(onTableNodeAtIndex);
         
-        auto cell = (TableViewCell*)table->dequeueCell();
+        auto cell = (TableViewCell*)sender->dequeueCell();
         if( !cell ){
             cell = new (std::nothrow) TableViewCell();
             cell->autorelease();
@@ -90,11 +90,11 @@ TableViewEasyLambda::TableViewEasyLambda()
         
         auto container = (Node*)cell->getUserData();
         if( !container ){
-            container = onTableNodeAtIndex(idx, nullptr);
+            container = onTableNodeAtIndex(idx, nullptr, this);
             cell->setUserData( container );
             cell->addChild( container );
         }else{
-            onTableNodeAtIndex(idx, container);
+            onTableNodeAtIndex(idx, container, this);
         }
         
         return cell;
