@@ -233,6 +233,7 @@ void DeviceCamera::stop(){
         
         delete internal;
         _internal = nullptr;
+        CC_SAFE_RELEASE_NULL(_renderTarget);
         Director::getInstance()->getScheduler()->unscheduleUpdate(this);
     }
 }

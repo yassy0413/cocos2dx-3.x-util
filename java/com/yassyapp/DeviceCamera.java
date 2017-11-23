@@ -126,6 +126,7 @@ public class DeviceCamera implements Camera.PreviewCallback, Callback {
         mInstance.mCamera.release();
         mInstance.mCamera = null;
         mInstance.mFrameBuffer = null;
+        mInstance = null;
     }
 
     @Override

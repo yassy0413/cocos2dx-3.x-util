@@ -118,6 +118,7 @@ void DeviceCamera::stop(){
     if( CCDeviceCamera* internal = (CCDeviceCamera*)_internal ){
         [internal release];
         _internal = nullptr;
+        CC_SAFE_RELEASE_NULL(_renderTarget);
         cocos2d::Director::getInstance()->getScheduler()->unscheduleUpdate(this);
     }
 }
