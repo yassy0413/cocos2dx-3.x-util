@@ -78,6 +78,7 @@ void PathFinder::setCurrentDirectory(const std::string& path){
     for( const auto& stat : _statList ){
         strings.push_back( stat.path );
     }
+    std::stable_sort(strings.begin(), strings.end(), std::less<const std::string&>());
     setStrings( std::move(strings) );
     
     //
