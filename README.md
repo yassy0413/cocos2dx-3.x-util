@@ -16,9 +16,8 @@ sourceSets.main {
 ```
 
 # 公開アプリ
-### 輝演算
+### 早打暗算
 * https://itunes.apple.com/jp/app/smarterrarity/id1125820759?l=ja&mt=8
-* https://play.google.com/store/apps/details?id=com.yassyapp.kienzan
 
 
 
